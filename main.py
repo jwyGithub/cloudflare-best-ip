@@ -13,6 +13,7 @@ from utils.logging import setup_logging, get_logger
 from core.cidr import process_cidr
 from core.test import test_ips
 from core.geo import batch_geo_lookup
+from core.sync import GitHubSyncError, sync_ips_to_github_from_config
 
 
 async def main() -> None:
@@ -58,6 +59,14 @@ async def main() -> None:
         "结果已写入: %s  (共 %d 条，限制 %d 条)",
         output_path, len(lines), limit,
     )
+
+    try:
+        await sync_ips_to_github_from_config(
+            local_path=output_path,
+            config=config.sync.github if config.sync else None,
+        )
+    except GitHubSyncError as exc:
+        logger.error("GitHub 同步失败: %s", exc)
 
 
 if __name__ == "__main__":

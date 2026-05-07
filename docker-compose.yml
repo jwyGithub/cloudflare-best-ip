@@ -8,9 +8,11 @@ services:
             - ./output:/app/output
         environment:
             TZ: Asia/Shanghai
+            # 可选：启用 sync.github 时用于 GitHub API 同步。
+            # 建议在 .env 中设置 GITHUB_TOKEN，避免明文提交。
+            GITHUB_TOKEN: ${GITHUB_TOKEN:-}
         logging:
             driver: json-file
             options:
                 max-size: '10m'
                 max-file: '3'
-

@@ -53,6 +53,21 @@ class ScheduleConfig(BaseModel):
     timezone: str = "Asia/Shanghai"  # IANA 时区名称
 
 
+class GitHubSyncConfig(BaseModel):
+    enabled: bool = False
+    owner: Optional[str] = None
+    repo: Optional[str] = None
+    remote_path: str = "ips.txt"
+    branch: str = "main"
+    token: Optional[str] = None
+    token_env: str = "GITHUB_TOKEN"
+    commit_message: str = "chore: update ips.txt"
+
+
+class SyncConfig(BaseModel):
+    github: Optional[GitHubSyncConfig] = None
+
+
 class Config(BaseModel):
     scan: ScanConfig
     output: OutputConfig = Field(default_factory=OutputConfig)
@@ -60,6 +75,7 @@ class Config(BaseModel):
     http: HttpConfig = Field(default_factory=HttpConfig)
     geo: GeoConfig = Field(default_factory=GeoConfig)
     schedule: ScheduleConfig = Field(default_factory=ScheduleConfig)
+    sync: Optional[SyncConfig] = None
 
 
 class TestResult(BaseModel):

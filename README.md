@@ -12,6 +12,7 @@ A Python tool that samples IPs from Cloudflare CIDR lists, tests latency via `cd
 - Output format: `ip:port#CountryCode-Region` (e.g. `1.2.3.4:443#CN-Guangdong`)
 - Scheduled execution using supercronic inside Docker (cron expression from `config.yaml`)
 - Config injected via volume mount or `CONFIG_YAML_BASE64` environment variable
+- Optional GitHub sync via the GitHub Contents API
 
 ## Quick Start
 
@@ -41,8 +42,32 @@ Copy `config.example.yaml` to `config.yaml` and adjust as needed. Key sections:
 | `http`     | Request timeout, retries for CIDR fetching     |
 | `geo`      | ip-api.com batch query settings                |
 | `log`      | Log level and optional log file path           |
+| `sync`     | Optional GitHub sync settings for publishing the output file |
 
 Default schedule: `0 0 * * *` (UTC 00:00 = UTC+8 08:00).
+
+### GitHub Sync
+
+GitHub sync is disabled unless `sync.github.enabled` is `true`.
+
+```yaml
+sync:
+  github:
+    enabled: true
+    owner: your-github-name
+    repo: your-repo
+    branch: main
+    remote_path: ips.txt
+    token: null
+    token_env: GITHUB_TOKEN
+    commit_message: 'chore: update ips.txt'
+```
+
+Provide the token through an environment variable instead of writing it into `config.yaml`:
+
+```bash
+GITHUB_TOKEN=github_pat_xxx
+```
 
 ## Docker
 
@@ -57,6 +82,7 @@ Inject config without a volume (base64-encoded):
 ```bash
 docker run \
   -e CONFIG_YAML_BASE64="$(base64 -i config.yaml)" \
+  -e GITHUB_TOKEN="github_pat_xxx" \
   -v ./output:/app/output \
   ghcr.io/jwygithub/cloudflare-best-ip:latest
 ```
