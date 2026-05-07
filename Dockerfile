@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
     && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
     && chmod +x "$SUPERCRONIC" \
     && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
-    && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
+    && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic \
     && apt-get remove -y curl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
