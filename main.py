@@ -27,10 +27,10 @@ async def main() -> None:
     logger.info("配置加载成功:\n%s", config.model_dump_json(indent=4))
 
     # ── 选取 IP 源（取 cm-list）────────────────────────────────
-    ip_key = "cm-list"
+    ip_key = config.scan.ip_key
     ip_url = config.scan.sources.get(ip_key)
     if not ip_url:
-        logger.error("配置中找不到 ip 源: %s", ip_key)
+        logger.error("配置中找不到 IP 源: %s", ip_key)
         sys.exit(1)
 
     # ── 拉取 CIDR 并生成 ip:port 列表 ─────────────────────────

@@ -15,6 +15,7 @@ class PortConfig(BaseModel):
 class ScanConfig(BaseModel):
     """IP 扫描相关配置：来源、端口、并发、采样数量。"""
     sources: Dict[str, str]         # IP 源名称 -> URL
+    ip_key: str = 'cloudflare'
     port: PortConfig = Field(default_factory=PortConfig)
     thread: int = 8                 # 并发测试协程数
     total: int = 512                # 从 CIDR 采样的 IP 总数

@@ -1,6 +1,7 @@
 scan:
     sources:
         cloudflare: 'https://cf.xxx.xxx'
+    ip_key: 'cloudflare'
     port:
         list:
             - 443
