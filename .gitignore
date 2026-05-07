@@ -220,3 +220,5 @@ __marimo__/
 # config
 config.yaml
 result.txt
+ips.txt
+output/

@@ -45,6 +45,7 @@ async def main() -> None:
     geo_map = await batch_geo_lookup(unique_ips, config.geo)
 
     output_path = Path(__file__).parent / config.output.path
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     lines: list[str] = []
     for r in top:
         geo = geo_map.get(r.ip)

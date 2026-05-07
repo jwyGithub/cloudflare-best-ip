@@ -37,7 +37,7 @@ Copy `config.example.yaml` to `config.yaml` and adjust as needed. Key sections:
 | ---------- | ---------------------------------------------- |
 | `scan`     | IP sources, ports, concurrency, sample size    |
 | `schedule` | Cron expression (UTC) and timezone for logging |
-| `output`   | Output file path and max number of IPs to keep |
+| `output`   | Output file path and max number of IPs to keep. Use `output/...` with Docker Compose so files land in the mounted `./output` directory |
 | `http`     | Request timeout, retries for CIDR fetching     |
 | `geo`      | ip-api.com batch query settings                |
 | `log`      | Log level and optional log file path           |

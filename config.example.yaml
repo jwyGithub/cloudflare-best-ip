@@ -18,7 +18,7 @@ scan:
 
 # 输出配置
 output:
-    path: result.txt # 输出文件路径
+    path: output/result.txt # 输出文件路径
     limit: 30 # 最终保留的 IP 条数
 
 # 定时任务配置（仅供文档说明，实际调度由 Docker / cron 外部驱动）
@@ -45,4 +45,3 @@ geo:
     timeout: 10.0
     retries: 3
     retry_delay: 1.0
-
