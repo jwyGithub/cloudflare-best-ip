@@ -1,0 +1,16 @@
+services:
+    cloudflare-best-ip:
+        image: ghcr.io/jwygithub/cloudflare-best-ip:latest
+        container_name: cloudflare-best-ip
+        restart: unless-stopped
+        volumes:
+            - ./config/config.yaml:/app/config/config.yaml:ro
+            - ./output:/app/output
+        environment:
+            TZ: Asia/Shanghai
+        logging:
+            driver: json-file
+            options:
+                max-size: '10m'
+                max-file: '3'
+

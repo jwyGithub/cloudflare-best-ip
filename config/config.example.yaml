@@ -1,0 +1,47 @@
+scan:
+    sources:
+        cloudflare: 'https://cf.xxx.xxx'
+    port:
+        list:
+            - 443
+            - 2053
+            - 2083
+            - 2087
+            - 2096
+            - 8443
+        default: 443
+    thread: 8
+    total: 30
+    # {hex_ip} 和 {port} 为占位符，运行时动态替换为实际值
+    test_url: 'https://{hex_ip}.test.com:{port}'
+
+# 输出配置
+output:
+    path: result.txt # 输出文件路径
+    limit: 30 # 最终保留的 IP 条数
+
+# 定时任务配置（仅供文档说明，实际调度由 Docker / cron 外部驱动）
+schedule:
+    cron: '0 0 * * *' # cron 表达式（UTC），默认 UTC 00:00 = UTC+8 08:00
+    timezone: 'Asia/Shanghai' # IANA 时区名称，用于日志展示
+
+# 日志配置
+log:
+    level: INFO # DEBUG / INFO / WARNING / ERROR
+    file: null # 日志文件路径，null 表示只输出到控制台
+
+# HTTP 请求配置
+http:
+    timeout: 5 # 单次请求超时（秒）
+    retries: 3 # 重试次数
+    retry_delay: 1 # 重试间隔（秒）
+
+# 地理信息查询配置
+geo:
+    url: http://ip-api.com/batch
+    batch_limit: 100 # 单次批量查询上限（ip-api.com 最大 100）
+    fields: status,countryCode,region,query
+    timeout: 10.0
+    retries: 3
+    retry_delay: 1.0
+
