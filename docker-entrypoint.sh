@@ -20,7 +20,7 @@ if [ ! -f "${CONFIG_PATH}" ]; then
 fi
 
 # 解析 cron 表达式（取 schedule.cron 字段，默认 "0 0 * * *"）
-CRON_EXPR=$(python3 -c "
+CRON_EXPR=$(uv run python3 -c "
 import yaml, sys
 try:
     with open('${CONFIG_PATH}') as f:
