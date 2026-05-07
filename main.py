@@ -16,7 +16,7 @@ from core.geo import batch_geo_lookup
 
 
 async def main() -> None:
-    config_path = Path(__file__).parent / "config" / "config.yaml"
+    config_path = Path(__file__).parent / "config.yaml"
     config = load_config(config_path)
 
     setup_logging(level=config.log.level, log_file=config.log.file)

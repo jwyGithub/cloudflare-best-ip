@@ -27,7 +27,8 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY main.py ./
-COPY config/config.example.yaml ./config/config.example.yaml
+COPY config/ ./config/
+COPY config.example.yaml ./config.example.yaml
 COPY core/ ./core/
 COPY models/ ./models/
 COPY utils/ ./utils/
@@ -35,6 +36,6 @@ COPY utils/ ./utils/
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-VOLUME ["/app/config", "/app/output"]
+VOLUME ["/app/output"]
 
 ENTRYPOINT ["docker-entrypoint.sh"]

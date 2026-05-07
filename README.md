@@ -17,7 +17,7 @@ A Python tool that samples IPs from Cloudflare CIDR lists, tests latency via `cd
 
 ```bash
 # 1. Copy and edit config
-cp config/config.example.yaml config/config.yaml
+cp config.example.yaml config.yaml
 
 # 2. Run with Docker Compose
 docker compose up -d
@@ -31,7 +31,7 @@ uv run python main.py
 
 ## Configuration
 
-Copy `config/config.example.yaml` to `config/config.yaml` and adjust as needed. Key sections:
+Copy `config.example.yaml` to `config.yaml` and adjust as needed. Key sections:
 
 | Section    | Description                                    |
 | ---------- | ---------------------------------------------- |
@@ -56,7 +56,7 @@ Inject config without a volume (base64-encoded):
 
 ```bash
 docker run \
-  -e CONFIG_YAML_BASE64="$(base64 -i config/config.yaml)" \
+  -e CONFIG_YAML_BASE64="$(base64 -i config.yaml)" \
   -v ./output:/app/output \
   ghcr.io/jwygithub/cloudflare-best-ip:latest
 ```
@@ -75,4 +75,3 @@ The workflow builds multi-arch images (`amd64` + `arm64`) and pushes them to GHC
 ## License
 
 ISC
-

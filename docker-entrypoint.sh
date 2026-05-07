@@ -1,22 +1,21 @@
 #!/bin/sh
 # docker-entrypoint.sh
 # 从 config.yaml 读取 cron 表达式，写入 supercronic crontab，然后启动调度。
-# 若 CONFIG_YAML 环境变量有值，则将其内容写入 /app/config/config.yaml（适合 k8s Secret / Docker secret）。
+# 若 CONFIG_YAML_BASE64 环境变量有值，则将其内容写入 /app/config.yaml（适合 k8s Secret / Docker secret）。
 set -e
 
-CONFIG_PATH="/app/config/config.yaml"
+CONFIG_PATH="/app/config.yaml"
 
 # 支持通过环境变量直接注入配置内容（base64 编码）
 if [ -n "${CONFIG_YAML_BASE64}" ]; then
     echo "[entrypoint] 从 CONFIG_YAML_BASE64 写入配置..."
-    mkdir -p /app/config
     echo "${CONFIG_YAML_BASE64}" | base64 -d > "${CONFIG_PATH}"
 fi
 
 # 配置文件不存在时，使用示例配置并警告
 if [ ! -f "${CONFIG_PATH}" ]; then
     echo "[entrypoint] 警告: 未找到 ${CONFIG_PATH}，使用示例配置（仅供测试）"
-    cp /app/config/config.example.yaml "${CONFIG_PATH}"
+    cp /app/config.example.yaml "${CONFIG_PATH}"
 fi
 
 # 解析 cron 表达式（取 schedule.cron 字段，默认 "0 0 * * *"）
