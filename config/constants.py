@@ -25,7 +25,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "default": None,
         },
         "thread": 8,
-        "total": 30,
+        "total": 512,
         "test_url": "https://{hex_ip}.nip.lfree.org:{port}/cdn-cgi/trace",
     },
     "output": {
