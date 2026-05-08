@@ -1,5 +1,5 @@
 """
-程序入口：加载配置 → 拉取 CIDR → 测试 IP → 查询地理信息 → 写出文本文件。
+程序入口：加载配置 → 解析内置 CIDR → 测试 IP → 查询地理信息 → 写出文本文件。
 """
 
 from __future__ import annotations
@@ -7,31 +7,83 @@ from __future__ import annotations
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
-from config import load_config
-from utils.logging import setup_logging, get_logger
+from config import load_config, resolve_scan_cidrs
 from core.cidr import process_cidr
-from core.test import test_ips
 from core.geo import batch_geo_lookup
 from core.sync import GitHubSyncError, sync_ips_to_github_from_config
+from core.test import test_ips
+from models import Config
+from utils.logging import get_logger, setup_logging
+from utils.signal_handler import setup_signal_handlers
+
+
+def _format_optional(value: str | None) -> str:
+    return value if value else "<empty>"
+
+
+def _format_scan_port(config: Config) -> str:
+    port_config = config.scan.port
+    if port_config.default is not None:
+        return str(port_config.default)
+    return f"<random:{','.join(str(port) for port in port_config.list)}>"
+
+
+def _log_config_summary(logger: Any, config: Config) -> None:
+    sources = ",".join(config.scan.sources) if config.scan.sources else "<empty>"
+    log_file = config.log.file or "<disabled>"
+    github = config.sync.github if config.sync else None
+
+    logger.info("运行配置: SCAN_SOURCE={} SCAN_PORT={}", sources, _format_scan_port(config))
+    logger.info(
+        "运行配置: SCAN_TOTAL={} SCAN_OUTPUT_PATH={} SCAN_OUTPUT_LIMIT={}",
+        config.scan.total,
+        config.output.path,
+        config.output.limit,
+    )
+    logger.info(
+        "运行配置: SCHEDULE_CRON={} SCHEDULE_TIMEZONE={} LOG_LEVEL={} LOG_FILE={}",
+        config.schedule.cron,
+        config.schedule.timezone,
+        config.log.level,
+        log_file,
+    )
+
+    if not github:
+        logger.info("运行配置: SYNC_GITHUB_ENABLED=False SYNC_GITHUB_TOKEN=<empty>")
+        return
+
+    logger.info(
+        "运行配置: SYNC_GITHUB_ENABLED={} SYNC_GITHUB_OWNER={} SYNC_GITHUB_REPO={} "
+        "SYNC_GITHUB_BRANCH={} SYNC_GITHUB_REMOTE_PATH={}",
+        github.enabled,
+        _format_optional(github.owner),
+        _format_optional(github.repo),
+        _format_optional(github.branch),
+        _format_optional(github.remote_path),
+    )
+    logger.info("运行配置: SYNC_GITHUB_TOKEN={}", "<set>" if github.token else "<empty>")
 
 
 async def main() -> None:
-    config_path = Path(__file__).parent / "config.yaml"
-    config = load_config(config_path)
+    # 设置信号处理器
+    setup_signal_handlers()
+
+    config = load_config()
 
     setup_logging(level=config.log.level, log_file=config.log.file)
     logger = get_logger("best.main")
 
-    logger.info("配置加载成功:\n%s", config.model_dump_json(indent=4))
+    _log_config_summary(logger, config)
 
-    ip_key = config.scan.ip_key
-    ip_url = config.scan.sources.get(ip_key)
-    if not ip_url:
-        logger.error("配置中找不到 IP 源: %s", ip_key)
+    try:
+        cidrs = resolve_scan_cidrs(config)
+    except ValueError as exc:
+        logger.error("{}", exc)
         sys.exit(1)
 
-    ips = await process_cidr(ip_url, config)
+    ips = await process_cidr(cidrs, config)
 
     results = await test_ips(ips, config)
 
@@ -56,7 +108,7 @@ async def main() -> None:
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     logger.info(
-        "结果已写入: %s  (共 %d 条，限制 %d 条)",
+        "结果已写入: {}  (共 {} 条，限制 {} 条)",
         output_path, len(lines), limit,
     )
 
@@ -66,7 +118,7 @@ async def main() -> None:
             config=config.sync.github if config.sync else None,
         )
     except GitHubSyncError as exc:
-        logger.error("GitHub 同步失败: %s", exc)
+        logger.error("GitHub 同步失败: {}", exc)
 
 
 if __name__ == "__main__":

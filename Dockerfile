@@ -28,7 +28,6 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY main.py ./
 COPY config/ ./config/
-COPY config.example.yaml ./config.example.yaml
 COPY core/ ./core/
 COPY models/ ./models/
 COPY utils/ ./utils/

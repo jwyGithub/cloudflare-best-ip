@@ -1,57 +1,27 @@
 """
-CIDR 处理：远程拉取 CIDR 列表，随机采样生成 ip:port 字符串。
+CIDR 处理：从内置 CIDR 列表随机采样生成 ip:port 字符串。
 """
 
 from __future__ import annotations
 
-import asyncio
-import logging
-
-import httpx
-
 from models import Config
 from utils import generate_random_ip_from_cidr, get_random_port
+from utils.logging import get_logger
 
-logger = logging.getLogger(__name__)
-
-
-async def _fetch_with_retry(url: str, retries: int, timeout: float, retry_delay: float) -> str:
-    """带重试的 HTTP GET，返回响应文本。"""
-    last_error: Exception | None = None
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-        for attempt in range(1, retries + 1):
-            try:
-                logger.debug("第 %d 次请求: %s", attempt, url)
-                resp = await client.get(url)
-                resp.raise_for_status()
-                return resp.text
-            except Exception as exc:
-                last_error = exc
-                logger.warning("请求失败 (第 %d/%d 次): %s — %s", attempt, retries, url, exc)
-                if attempt < retries:
-                    await asyncio.sleep(retry_delay)
-
-    raise RuntimeError(f"请求 {url} 在 {retries} 次重试后仍失败") from last_error
+logger = get_logger(__name__)
 
 
-async def process_cidr(ip_url: str, config: Config) -> list[str]:
+async def process_cidr(cidrs: list[str], config: Config) -> list[str]:
     """
-    拉取远程 CIDR 列表，随机采样直到凑满 config.total 个唯一 ip:port。
+    从 CIDR 列表随机采样，直到凑满 config.total 个唯一 ip:port。
 
     Returns:
         list[str]: 形如 "1.2.3.4:443" 的字符串列表。
     """
-    logger.info("获取 CIDR 列表开始: %s", ip_url)
-
-    http = config.http
-    text = await _fetch_with_retry(ip_url, http.retries, http.timeout, http.retry_delay)
-
-    # 过滤空行和注释行
-    cidrs = [line.strip() for line in text.splitlines() if line.strip() and not line.startswith("#")]
-    logger.info("解析到 CIDR 条目: %d 条", len(cidrs))
+    logger.info("加载 CIDR 条目: {} 条", len(cidrs))
 
     if not cidrs:
-        raise ValueError(f"CIDR 列表为空: {ip_url}")
+        raise ValueError("CIDR 列表为空")
 
     total = config.scan.total
     port_cfg = config.scan.port
@@ -68,7 +38,7 @@ async def process_cidr(ip_url: str, config: Config) -> list[str]:
     while len(result) < total:
         if attempts >= max_attempts:
             logger.warning(
-                "已达最大采样次数 %d，当前仅收集到 %d 个 IP（目标 %d）",
+                "已达最大采样次数 {}，当前仅收集到 {} 个 IP（目标 {}）",
                 max_attempts, len(result), total,
             )
             break
@@ -83,5 +53,5 @@ async def process_cidr(ip_url: str, config: Config) -> list[str]:
                 seen.add(entry)
                 result.append(entry)
 
-    logger.info("CIDR 采样完成: 生成 %d 个 ip:port", len(result))
+    logger.info("CIDR 采样完成: 生成 {} 个 ip:port", len(result))
     return result

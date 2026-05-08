@@ -6,21 +6,17 @@ A Python tool that samples IPs from Cloudflare CIDR lists, tests latency via `cd
 
 ## Features
 
-- Fetches and samples IPs from configurable CIDR sources
+- Samples IPs from built-in CIDR sources
 - Concurrent latency testing with `asyncio` (concurrency controlled by `scan.thread`)
 - Geo lookup via [ip-api.com](http://ip-api.com) batch API
 - Output format: `ip:port#CountryCode-Region` (e.g. `1.2.3.4:443#CN-Guangdong`)
-- Scheduled execution using supercronic inside Docker (cron expression from `config.yaml`)
-- Config injected via volume mount or `CONFIG_YAML_BASE64` environment variable
+- Scheduled execution using supercronic inside Docker
+- Configuration via environment variables
 - Optional GitHub sync via the GitHub Contents API
 
 ## Quick Start
 
 ```bash
-# 1. Copy and edit config
-cp config.example.yaml config.yaml
-
-# 2. Run with Docker Compose
 docker compose up -d
 ```
 
@@ -32,42 +28,53 @@ uv run python main.py
 
 ## Configuration
 
-Copy `config.example.yaml` to `config.yaml` and adjust as needed. Key sections:
+Defaults are defined in `config/constants.py`. Override values with environment variables.
+`SCAN_SOURCE` is only read from the environment. Source names come from `config/source/*.txt`; if unset or empty, `cloudflare` is used.
+By default, the port is randomly selected from `443,2053,2083,2087,2096,8443`. Set `SCAN_PORT=443` to force a fixed port at runtime.
 
 | Section    | Description                                    |
 | ---------- | ---------------------------------------------- |
-| `scan`     | IP sources, ports, concurrency, sample size    |
+| `scan`     | Ports, concurrency, sample size                          |
 | `schedule` | Cron expression (UTC) and timezone for logging |
 | `output`   | Output file path and max number of IPs to keep. Use `output/...` with Docker Compose so files land in the mounted `./output` directory |
-| `http`     | Request timeout, retries for CIDR fetching     |
+| `http`     | Request timeout and retries                    |
 | `geo`      | ip-api.com batch query settings                |
 | `log`      | Log level and optional log file path           |
 | `sync`     | Optional GitHub sync settings for publishing the output file |
 
 Default schedule: `0 0 * * *` (UTC 00:00 = UTC+8 08:00).
 
+Environment overrides:
+
+| Variable             | Description                         |
+| -------------------- | ----------------------------------- |
+| `SCAN_SOURCE`        | Built-in source name from `config/source/*.txt`, e.g. `cloudflare` |
+| `SCAN_PORT`          | Fixed port; unset means random port |
+| `SCAN_TOTAL`         | Number of sampled IPs               |
+| `SCAN_OUTPUT_PATH`   | Output file path                    |
+| `SCAN_OUTPUT_LIMIT`  | Max number of IPs to keep           |
+| `SCHEDULE_CRON`      | Cron expression                     |
+| `SCHEDULE_TIMEZONE`  | IANA timezone name                  |
+| `LOG_LEVEL`          | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `SYNC_GITHUB_OWNER`  | GitHub user or organization         |
+| `SYNC_GITHUB_REPO`   | GitHub repository name              |
+| `SYNC_GITHUB_BRANCH` | Branch to update                    |
+| `SYNC_GITHUB_REMOTE_PATH` | Target file path in repository |
+| `SYNC_GITHUB_TOKEN`  | GitHub token                        |
+
 ### GitHub Sync
 
-GitHub sync is disabled unless `sync.github.enabled` is `true`.
-
-```yaml
-sync:
-  github:
-    enabled: true
-    owner: your-github-name
-    repo: your-repo
-    branch: main
-    remote_path: ips.txt
-    token: null
-    token_env: GITHUB_TOKEN
-    commit_message: 'chore: update ips.txt'
-```
-
-Provide the token through an environment variable instead of writing it into `config.yaml`:
+GitHub sync is disabled unless all required GitHub sync environment variables are set:
 
 ```bash
-GITHUB_TOKEN=github_pat_xxx
+SYNC_GITHUB_OWNER=your-github-name
+SYNC_GITHUB_REPO=your-repo
+SYNC_GITHUB_BRANCH=main
+SYNC_GITHUB_REMOTE_PATH=ips.txt
+SYNC_GITHUB_TOKEN=github_pat_xxx
 ```
+
+When all five values are set, GitHub sync is enabled automatically.
 
 ## Docker
 
@@ -77,15 +84,28 @@ Pull the latest image:
 docker pull ghcr.io/jwygithub/cloudflare-best-ip:latest
 ```
 
-Inject config without a volume (base64-encoded):
+Run with environment overrides:
 
 ```bash
 docker run \
-  -e CONFIG_YAML_BASE64="$(base64 -i config.yaml)" \
-  -e GITHUB_TOKEN="github_pat_xxx" \
+  -e SCAN_SOURCE="cloudflare" \
+  -e SCAN_PORT="443" \
+  -e SCAN_TOTAL="30" \
+  -e SCAN_OUTPUT_PATH="output/result.txt" \
+  -e SCAN_OUTPUT_LIMIT="30" \
+  -e SCHEDULE_CRON="0 0 * * *" \
+  -e SCHEDULE_TIMEZONE="Asia/Shanghai" \
+  -e LOG_LEVEL="INFO" \
+  -e SYNC_GITHUB_OWNER="your-github-name" \
+  -e SYNC_GITHUB_REPO="your-repo" \
+  -e SYNC_GITHUB_BRANCH="main" \
+  -e SYNC_GITHUB_REMOTE_PATH="ips.txt" \
+  -e SYNC_GITHUB_TOKEN="github_pat_xxx" \
   -v ./output:/app/output \
   ghcr.io/jwygithub/cloudflare-best-ip:latest
 ```
+
+Omit `SCAN_PORT` to randomly select from the built-in port pool.
 
 ## Publishing a Release
 

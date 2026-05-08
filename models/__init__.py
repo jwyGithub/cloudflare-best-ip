@@ -2,20 +2,19 @@
 数据模型：项目所有 Pydantic 数据模型。
 """
 
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 
 class PortConfig(BaseModel):
-    list: List[int] = Field(default_factory=lambda: [443])
-    default: int = 443
+    list: List[int] = Field(default_factory=lambda: [443, 2053, 2083, 2087, 2096, 8443])
+    default: Optional[int] = None
 
 
 class ScanConfig(BaseModel):
     """IP 扫描相关配置：来源、端口、并发、采样数量。"""
-    sources: Dict[str, str]         # IP 源名称 -> URL
-    ip_key: str = 'cloudflare'
+    sources: List[str] = Field(default_factory=lambda: ["cloudflare"])  # 内置 IP 源名称列表
     port: PortConfig = Field(default_factory=PortConfig)
     thread: int = 8                 # 并发测试协程数
     total: int = 512                # 从 CIDR 采样的 IP 总数
@@ -60,7 +59,6 @@ class GitHubSyncConfig(BaseModel):
     remote_path: str = "ips.txt"
     branch: str = "main"
     token: Optional[str] = None
-    token_env: str = "GITHUB_TOKEN"
     commit_message: str = "chore: update ips.txt"
 
 
