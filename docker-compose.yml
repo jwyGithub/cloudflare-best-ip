@@ -13,7 +13,7 @@ services:
             SCAN_PORT: ${SCAN_PORT:-}
             # 可选：扫描数量。默认 512
             SCAN_TOTAL: ${SCAN_TOTAL:-}
-            # 可选：输出文件路径。默认 result.txt
+            # 可选：输出文件路径。默认 output/ips.txt
             SCAN_OUTPUT_PATH: ${SCAN_OUTPUT_PATH:-}
             # 可选：输出文件最大行数。默认 100
             SCAN_OUTPUT_LIMIT: ${SCAN_OUTPUT_LIMIT:-}
