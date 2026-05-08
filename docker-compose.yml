@@ -11,11 +11,13 @@ services:
             SCAN_SOURCE: ${SCAN_SOURCE:-}
             # 可选：指定固定端口；留空时从内置端口池随机选择。
             SCAN_PORT: ${SCAN_PORT:-}
+            # 可选：并发测试协程数。默认 8
+            SCAN_CONCURRENCY: ${SCAN_CONCURRENCY:-}
             # 可选：扫描数量。默认 512
             SCAN_TOTAL: ${SCAN_TOTAL:-}
             # 可选：输出文件路径。默认 output/ips.txt
             SCAN_OUTPUT_PATH: ${SCAN_OUTPUT_PATH:-}
-            # 可选：输出文件最大行数。默认 100
+            # 可选：输出文件最大行数。默认 60
             SCAN_OUTPUT_LIMIT: ${SCAN_OUTPUT_LIMIT:-}
             # 可选：cron 表达式。 默认 0 0 * * *
             SCHEDULE_CRON: ${SCHEDULE_CRON:-}

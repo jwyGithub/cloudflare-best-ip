@@ -7,7 +7,7 @@ CRON_EXPR="${SCHEDULE_CRON:-0 0 * * *}"
 
 echo "[entrypoint] 使用 cron 表达式: ${CRON_EXPR}"
 echo "[entrypoint] SCAN_SOURCE=${SCAN_SOURCE:-<default>} SCAN_PORT=${SCAN_PORT:-<random>}"
-echo "[entrypoint] SCAN_TOTAL=${SCAN_TOTAL:-<default>} SCAN_OUTPUT_PATH=${SCAN_OUTPUT_PATH:-<default>} SCAN_OUTPUT_LIMIT=${SCAN_OUTPUT_LIMIT:-<default>}"
+echo "[entrypoint] SCAN_CONCURRENCY=${SCAN_CONCURRENCY:-<default>} SCAN_TOTAL=${SCAN_TOTAL:-<default>} SCAN_OUTPUT_PATH=${SCAN_OUTPUT_PATH:-<default>} SCAN_OUTPUT_LIMIT=${SCAN_OUTPUT_LIMIT:-<default>}"
 echo "[entrypoint] SCHEDULE_CRON=${SCHEDULE_CRON:-<default>} SCHEDULE_TIMEZONE=${SCHEDULE_TIMEZONE:-<default>} LOG_LEVEL=${LOG_LEVEL:-<default>}"
 echo "[entrypoint] SYNC_GITHUB_OWNER=${SYNC_GITHUB_OWNER:-<empty>} SYNC_GITHUB_REPO=${SYNC_GITHUB_REPO:-<empty>} SYNC_GITHUB_BRANCH=${SYNC_GITHUB_BRANCH:-<empty>} SYNC_GITHUB_REMOTE_PATH=${SYNC_GITHUB_REMOTE_PATH:-<empty>}"
 if [ -n "${SYNC_GITHUB_TOKEN}" ]; then

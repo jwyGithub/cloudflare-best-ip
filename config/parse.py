@@ -46,7 +46,7 @@ def parse_env_sources() -> list[str] | None:
 
 
 def parse_env_ports() -> list[int] | None:
-    """从 SCAN_PORT 环境变量读取固定端口，支持逗号分隔。"""
+    """从 SCAN_PORT 环境变量读取合法端口，支持逗号分隔。"""
     value = _env_value("SCAN_PORT")
     if value is None:
         return None
@@ -59,14 +59,13 @@ def parse_env_ports() -> list[int] | None:
     for value in values:
         try:
             port = int(value)
-        except ValueError as exc:
-            raise ValueError(f"SCAN_PORT 环境变量必须是整数端口: {value}") from exc
+        except ValueError:
+            continue
 
-        if not 1 <= port <= 65535:
-            raise ValueError(f"SCAN_PORT 环境变量端口超出范围 1-65535: {port}")
-        ports.append(port)
+        if 1 <= port <= 65535:
+            ports.append(port)
 
-    return ports
+    return ports or None
 
 
 def apply_env_overrides(config: dict[str, Any]) -> None:
@@ -77,8 +76,11 @@ def apply_env_overrides(config: dict[str, Any]) -> None:
 
     env_ports = parse_env_ports()
     if env_ports is not None:
-        config["scan"]["port"]["list"] = env_ports
-        config["scan"]["port"]["default"] = env_ports[0]
+        config["scan"]["ports"] = env_ports
+
+    scan_concurrency = _parse_positive_int("SCAN_CONCURRENCY")
+    if scan_concurrency is not None:
+        config["scan"]["concurrency"] = scan_concurrency
 
     scan_total = _parse_positive_int("SCAN_TOTAL")
     if scan_total is not None:

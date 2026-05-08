@@ -7,7 +7,7 @@ A Python tool that samples IPs from Cloudflare CIDR lists, tests latency via `cd
 ## Features
 
 - Samples IPs from built-in CIDR sources
-- Concurrent latency testing with `asyncio` (concurrency controlled by `scan.thread`)
+- Concurrent latency testing with `asyncio` (concurrency controlled by `scan.concurrency`)
 - Geo lookup via [ip-api.com](http://ip-api.com) batch API
 - Output format: `ip:port#CountryCode-Region` (e.g. `1.2.3.4:443#CN-Guangdong`)
 - Scheduled execution using supercronic inside Docker
@@ -30,7 +30,7 @@ uv run python main.py
 
 Defaults are defined in `config/constants.py`. Override values with environment variables.
 `SCAN_SOURCE` is only read from the environment. Source names come from `config/source/*.txt`; if unset or empty, `cloudflare` is used.
-By default, the port is randomly selected from `443,2053,2083,2087,2096,8443`. Set `SCAN_PORT=443` to force a fixed port at runtime.
+By default, the port is randomly selected from `443,2053,2083,2087,2096,8443`. Set `SCAN_PORT=443` to force a fixed port at runtime. If `SCAN_PORT` is empty or invalid, the default random port pool is used.
 
 | Section    | Description                                    |
 | ---------- | ---------------------------------------------- |
@@ -49,7 +49,8 @@ Environment overrides:
 | Variable             | Description                         |
 | -------------------- | ----------------------------------- |
 | `SCAN_SOURCE`        | Built-in source name from `config/source/*.txt`, e.g. `cloudflare` |
-| `SCAN_PORT`          | Fixed port; unset means random port |
+| `SCAN_PORT`          | Fixed port; unset or invalid means random port |
+| `SCAN_CONCURRENCY`   | Number of concurrent latency test coroutines |
 | `SCAN_TOTAL`         | Number of sampled IPs               |
 | `SCAN_OUTPUT_PATH`   | Output file path                    |
 | `SCAN_OUTPUT_LIMIT`  | Max number of IPs to keep           |
@@ -90,6 +91,7 @@ Run with environment overrides:
 docker run \
   -e SCAN_SOURCE="cloudflare" \
   -e SCAN_PORT="443" \
+  -e SCAN_CONCURRENCY="8" \
   -e SCAN_TOTAL="30" \
   -e SCAN_OUTPUT_PATH="output/result.txt" \
   -e SCAN_OUTPUT_LIMIT="30" \

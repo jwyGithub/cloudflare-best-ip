@@ -101,13 +101,13 @@ async def _test_single_ip(
 
 async def test_ips(ips: List[str], config: Config) -> List[TestResult]:
     """
-    并发测试所有 ip:port，按 config.thread 控制并发度。
+    并发测试所有 ip:port，按 config.scan.concurrency 控制并发度。
 
     使用共享 AsyncClient（连接复用）+ asyncio.Semaphore（并发限制）。
     任务通过 asyncio.as_completed 流式消费，避免一次性创建全部协程的内存峰值。
     """
     total = len(ips)
-    concurrency = config.scan.thread
+    concurrency = config.scan.concurrency
     timeout = httpx.Timeout(float(config.http.timeout))
     test_url_tpl = config.scan.test_url
 

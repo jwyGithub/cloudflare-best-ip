@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -20,17 +21,14 @@ BUILTIN_SOURCES: dict[str, list[str]] = load_builtin_sources(SOURCE_DIR)
 DEFAULT_CONFIG: dict[str, Any] = {
     "scan": {
         "sources": ["cloudflare"],
-        "port": {
-            "list": ports,
-            "default": None,
-        },
-        "thread": 8,
+        "ports": ports,
+        "concurrency": 8,
         "total": 512,
         "test_url": "https://{hex_ip}.nip.lfree.org:{port}/cdn-cgi/trace",
     },
     "output": {
         "path": "output/ips.txt",
-        "limit": 100,
+        "limit": 60,
     },
     "log": {
         "level": "INFO",
@@ -61,7 +59,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "remote_path": "ips.txt",
             "branch": "main",
             "token": None,
-            "commit_message": "chore: update ips.txt",
+            "commit_message": f"chore: update ips.txt on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         },
     },
 }

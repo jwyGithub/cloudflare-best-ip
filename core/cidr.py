@@ -24,12 +24,8 @@ async def process_cidr(cidrs: list[str], config: Config) -> list[str]:
         raise ValueError("CIDR 列表为空")
 
     total = config.scan.total
-    port_cfg = config.scan.port
     result: list[str] = []
     seen: set[str] = set()
-
-    # port_cfg.default 用 is not None 判断，避免 0 被当作 falsy
-    fixed_port = port_cfg.default if port_cfg.default is not None else None
 
     # 安全上限：最多循环 total * 10 次，防止 CIDR 空间不足时死循环
     max_attempts = total * 10
@@ -47,7 +43,7 @@ async def process_cidr(cidrs: list[str], config: Config) -> list[str]:
                 break
             attempts += 1
             ip = generate_random_ip_from_cidr(cidr)
-            port = fixed_port if fixed_port is not None else get_random_port(port_cfg.list)
+            port = get_random_port(config.scan.ports)
             entry = f"{ip}:{port}"
             if entry not in seen:
                 seen.add(entry)

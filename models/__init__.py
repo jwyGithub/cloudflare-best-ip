@@ -7,24 +7,19 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class PortConfig(BaseModel):
-    list: List[int] = Field(default_factory=lambda: [443, 2053, 2083, 2087, 2096, 8443])
-    default: Optional[int] = None
-
-
 class ScanConfig(BaseModel):
     """IP 扫描相关配置：来源、端口、并发、采样数量。"""
     sources: List[str] = Field(default_factory=lambda: ["cloudflare"])  # 内置 IP 源名称列表
-    port: PortConfig = Field(default_factory=PortConfig)
-    thread: int = 8                 # 并发测试协程数
+    ports: List[int] = Field(default_factory=lambda: [443, 2053, 2083, 2087, 2096, 8443])
+    concurrency: int = 8            # 并发测试协程数
     total: int = 512                # 从 CIDR 采样的 IP 总数
     # {hex_ip} 和 {port} 为占位符，运行时动态替换
     test_url: str = "https://{hex_ip}.nip.lfree.org:{port}/cdn-cgi/trace"
 
 
 class OutputConfig(BaseModel):
-    path: str = "result.txt"
-    limit: int = 100
+    path: str = "output/ips.txt"
+    limit: int = 60
 
 
 class LogConfig(BaseModel):

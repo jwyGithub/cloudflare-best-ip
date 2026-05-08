@@ -24,10 +24,10 @@ def _format_optional(value: str | None) -> str:
 
 
 def _format_scan_port(config: Config) -> str:
-    port_config = config.scan.port
-    if port_config.default is not None:
-        return str(port_config.default)
-    return f"<random:{','.join(str(port) for port in port_config.list)}>"
+    ports = ",".join(str(port) for port in config.scan.ports)
+    if len(config.scan.ports) == 1:
+        return ports
+    return f"<random:{ports}>"
 
 
 def _log_config_summary(logger: Any, config: Config) -> None:
@@ -37,7 +37,8 @@ def _log_config_summary(logger: Any, config: Config) -> None:
 
     logger.info("运行配置: SCAN_SOURCE={} SCAN_PORT={}", sources, _format_scan_port(config))
     logger.info(
-        "运行配置: SCAN_TOTAL={} SCAN_OUTPUT_PATH={} SCAN_OUTPUT_LIMIT={}",
+        "运行配置: SCAN_CONCURRENCY={} SCAN_TOTAL={} SCAN_OUTPUT_PATH={} SCAN_OUTPUT_LIMIT={}",
+        config.scan.concurrency,
         config.scan.total,
         config.output.path,
         config.output.limit,
