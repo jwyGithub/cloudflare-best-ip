@@ -29,7 +29,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "test_url": "https://{hex_ip}.nip.lfree.org:{port}/cdn-cgi/trace",
     },
     "output": {
-        "path": "result.txt",
+        "path": "output/ips.txt",
         "limit": 100,
     },
     "log": {
