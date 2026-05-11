@@ -3,12 +3,15 @@
 # 从 SCHEDULE_CRON 读取 cron 表达式，写入 supercronic crontab，然后启动调度。
 set -e
 
-CRON_EXPR="${SCHEDULE_CRON:-0 0 * * *}"
+CRON_EXPR="${SCHEDULE_CRON:-0 6 * * *}"
+SCHEDULE_TZ="${SCHEDULE_TIMEZONE:-Asia/Shanghai}"
+export TZ="${TZ:-${SCHEDULE_TZ}}"
 
 echo "[entrypoint] 使用 cron 表达式: ${CRON_EXPR}"
+echo "[entrypoint] 使用调度时区: ${TZ}"
 echo "[entrypoint] SCAN_SOURCE=${SCAN_SOURCE:-<default>} SCAN_PORT=${SCAN_PORT:-<random>}"
 echo "[entrypoint] SCAN_CONCURRENCY=${SCAN_CONCURRENCY:-<default>} SCAN_TOTAL=${SCAN_TOTAL:-<default>} SCAN_OUTPUT_PATH=${SCAN_OUTPUT_PATH:-<default>} SCAN_OUTPUT_LIMIT=${SCAN_OUTPUT_LIMIT:-<default>}"
-echo "[entrypoint] SCHEDULE_CRON=${SCHEDULE_CRON:-<default>} SCHEDULE_TIMEZONE=${SCHEDULE_TIMEZONE:-<default>} LOG_LEVEL=${LOG_LEVEL:-<default>}"
+echo "[entrypoint] SCHEDULE_CRON=${SCHEDULE_CRON:-<default>} SCHEDULE_TIMEZONE=${SCHEDULE_TIMEZONE:-${SCHEDULE_TZ}} LOG_LEVEL=${LOG_LEVEL:-<default>}"
 echo "[entrypoint] SYNC_GITHUB_OWNER=${SYNC_GITHUB_OWNER:-<empty>} SYNC_GITHUB_REPO=${SYNC_GITHUB_REPO:-<empty>} SYNC_GITHUB_BRANCH=${SYNC_GITHUB_BRANCH:-<empty>} SYNC_GITHUB_REMOTE_PATH=${SYNC_GITHUB_REMOTE_PATH:-<empty>}"
 if [ -n "${SYNC_GITHUB_TOKEN}" ]; then
     echo "[entrypoint] SYNC_GITHUB_TOKEN=<set>"

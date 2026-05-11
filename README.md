@@ -35,14 +35,14 @@ By default, the port is randomly selected from `443,2053,2083,2087,2096,8443`. S
 | Section    | Description                                    |
 | ---------- | ---------------------------------------------- |
 | `scan`     | Ports, concurrency, sample size                          |
-| `schedule` | Cron expression (UTC) and timezone for logging |
+| `schedule` | Cron expression and timezone for Docker scheduling |
 | `output`   | Output file path and max number of IPs to keep. Use `output/...` with Docker Compose so files land in the mounted `./output` directory |
 | `http`     | Request timeout and retries                    |
 | `geo`      | ip-api.com batch query settings                |
 | `log`      | Log level and optional log file path           |
 | `sync`     | Optional GitHub sync settings for publishing the output file |
 
-Default schedule: `0 0 * * *` (UTC 00:00 = UTC+8 08:00).
+Default schedule: `0 6 * * *` in `Asia/Shanghai` timezone.
 
 Environment overrides:
 
@@ -95,7 +95,7 @@ docker run \
   -e SCAN_TOTAL="30" \
   -e SCAN_OUTPUT_PATH="output/result.txt" \
   -e SCAN_OUTPUT_LIMIT="30" \
-  -e SCHEDULE_CRON="0 0 * * *" \
+  -e SCHEDULE_CRON="0 6 * * *" \
   -e SCHEDULE_TIMEZONE="Asia/Shanghai" \
   -e LOG_LEVEL="INFO" \
   -e SYNC_GITHUB_OWNER="your-github-name" \

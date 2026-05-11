@@ -19,7 +19,7 @@ services:
             SCAN_OUTPUT_PATH: ${SCAN_OUTPUT_PATH:-}
             # 可选：输出文件最大行数。默认 60
             SCAN_OUTPUT_LIMIT: ${SCAN_OUTPUT_LIMIT:-}
-            # 可选：cron 表达式。 默认 0 0 * * *
+            # 可选：cron 表达式。 默认 0 6 * * *
             SCHEDULE_CRON: ${SCHEDULE_CRON:-}
             # 可选：时区。 默认 Asia/Shanghai
             SCHEDULE_TIMEZONE: ${SCHEDULE_TIMEZONE:-}

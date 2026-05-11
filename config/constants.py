@@ -48,7 +48,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "retry_delay": 1.0,
     },
     "schedule": {
-        "cron": "0 0 * * *",
+        "cron": "0 6 * * *",
         "timezone": "Asia/Shanghai",
     },
     "sync": {

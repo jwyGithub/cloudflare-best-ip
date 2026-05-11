@@ -43,7 +43,7 @@ class GeoConfig(BaseModel):
 
 
 class ScheduleConfig(BaseModel):
-    cron: str = "0 0 * * *"    # cron 表达式，默认 UTC 00:00 = UTC+8 08:00
+    cron: str = "0 6 * * *"    # cron 表达式，默认 Asia/Shanghai 每天 06:00
     timezone: str = "Asia/Shanghai"  # IANA 时区名称
 
 
