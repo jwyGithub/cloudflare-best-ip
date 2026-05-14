@@ -93,8 +93,8 @@ async def _test_single_ip(
         avg_time=avg_time,
     )
     logger.opt(colors=True).info(
-        "测试成功  <cyan><bold>{}:{}</bold></cyan> — 平均响应 <green><bold>{}ms</bold></green>, colo={}",
-        ip, port, avg_time, result.colo,
+        "测试成功  <cyan><bold>{}:{}</bold></cyan> — 平均响应 <green><bold>{}ms</bold></green>, colo={}, 响应 IP: <blue><bold>{}</bold></blue>",
+        ip, port, avg_time, result.colo, result.response_ip,
     )
     return result
 
