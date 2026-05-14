@@ -1,0 +1,4 @@
+interface:
+  display_name: "CF Best IP Runtime Entry"
+  short_description: "Docker scheduling and release workflow guide"
+  default_prompt: "Use $cloudflare-best-ip-runtime-entry to update Docker, scheduling, compose, or release workflows for this project."

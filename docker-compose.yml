@@ -31,6 +31,10 @@ services:
             SYNC_GITHUB_BRANCH: ${SYNC_GITHUB_BRANCH:-}
             SYNC_GITHUB_REMOTE_PATH: ${SYNC_GITHUB_REMOTE_PATH:-}
             SYNC_GITHUB_TOKEN: ${SYNC_GITHUB_TOKEN:-}
+            # 可选：配置 Cloudflare DNS 同步；设置 token 时自动启用，子域名默认 @
+            SYNC_CLOUDFLARE_SUB_DOMAIN: ${SYNC_CLOUDFLARE_SUB_DOMAIN:-}
+            SYNC_CLOUDFLARE_LIMIT: ${SYNC_CLOUDFLARE_LIMIT:-}
+            SYNC_CLOUDFLARE_TOKEN: ${SYNC_CLOUDFLARE_TOKEN:-}
         logging:
             driver: json-file
             options:

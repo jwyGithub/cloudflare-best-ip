@@ -12,7 +12,7 @@ from typing import Any
 from config import load_config, resolve_scan_cidrs
 from core.cidr import process_cidr
 from core.geo import batch_geo_lookup
-from core.sync import GitHubSyncError, sync_ips_to_github_from_config
+from core.sync import SyncError, sync_ips_from_config
 from core.test import test_ips
 from models import Config
 from utils.logging import get_logger, setup_logging
@@ -34,6 +34,7 @@ def _log_config_summary(logger: Any, config: Config) -> None:
     sources = ",".join(config.scan.sources) if config.scan.sources else "<empty>"
     log_file = config.log.file or "<disabled>"
     github = config.sync.github if config.sync else None
+    cloudflare = config.sync.cloudflare if config.sync else None
 
     logger.info("运行配置: SCAN_SOURCE={} SCAN_PORT={}", sources, _format_scan_port(config))
     logger.info(
@@ -53,18 +54,33 @@ def _log_config_summary(logger: Any, config: Config) -> None:
 
     if not github:
         logger.info("运行配置: SYNC_GITHUB_ENABLED=False SYNC_GITHUB_TOKEN=<empty>")
+    else:
+        logger.info(
+            "运行配置: SYNC_GITHUB_ENABLED={} SYNC_GITHUB_OWNER={} SYNC_GITHUB_REPO={} "
+            "SYNC_GITHUB_BRANCH={} SYNC_GITHUB_REMOTE_PATH={}",
+            github.enabled,
+            _format_optional(github.owner),
+            _format_optional(github.repo),
+            _format_optional(github.branch),
+            _format_optional(github.remote_path),
+        )
+        logger.info("运行配置: SYNC_GITHUB_TOKEN={}", "<set>" if github.token else "<empty>")
+
+    if not cloudflare:
+        logger.info(
+            "运行配置: CLOUDFLARE_DNS_SYNC=False SYNC_CLOUDFLARE_SUB_DOMAIN=@ "
+            "SYNC_CLOUDFLARE_LIMIT=<default> "
+            "SYNC_CLOUDFLARE_TOKEN=<empty>"
+        )
         return
 
     logger.info(
-        "运行配置: SYNC_GITHUB_ENABLED={} SYNC_GITHUB_OWNER={} SYNC_GITHUB_REPO={} "
-        "SYNC_GITHUB_BRANCH={} SYNC_GITHUB_REMOTE_PATH={}",
-        github.enabled,
-        _format_optional(github.owner),
-        _format_optional(github.repo),
-        _format_optional(github.branch),
-        _format_optional(github.remote_path),
+        "运行配置: CLOUDFLARE_DNS_SYNC={} SYNC_CLOUDFLARE_SUB_DOMAIN={} SYNC_CLOUDFLARE_LIMIT={}",
+        cloudflare.enabled,
+        _format_optional(cloudflare.sub_domain),
+        cloudflare.limit,
     )
-    logger.info("运行配置: SYNC_GITHUB_TOKEN={}", "<set>" if github.token else "<empty>")
+    logger.info("运行配置: SYNC_CLOUDFLARE_TOKEN={}", "<set>" if cloudflare.token else "<empty>")
 
 
 async def main() -> None:
@@ -114,12 +130,12 @@ async def main() -> None:
     )
 
     try:
-        await sync_ips_to_github_from_config(
+        await sync_ips_from_config(
             local_path=output_path,
-            config=config.sync.github if config.sync else None,
+            config=config.sync,
         )
-    except GitHubSyncError as exc:
-        logger.error("GitHub 同步失败: {}", exc)
+    except SyncError as exc:
+        logger.error("同步失败: {}", exc)
 
 
 if __name__ == "__main__":

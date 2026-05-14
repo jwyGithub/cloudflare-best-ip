@@ -1,0 +1,4 @@
+interface:
+  display_name: "CF Best IP Core Entry"
+  short_description: "CIDR sampling latency and geo workflow guide"
+  default_prompt: "Use $cloudflare-best-ip-core-entry to change CIDR sampling, latency testing, geo lookup, or GitHub sync behavior."

@@ -137,6 +137,22 @@ def apply_env_overrides(config: dict[str, Any]) -> None:
     if all(required_sync_values):
         sync_github["enabled"] = True
 
+    sync_cloudflare = config.setdefault("sync", {}).setdefault("cloudflare", {})
+
+    cloudflare_sub_domain = _env_value("SYNC_CLOUDFLARE_SUB_DOMAIN")
+    cloudflare_token = _env_value("SYNC_CLOUDFLARE_TOKEN")
+    cloudflare_limit = _parse_positive_int("SYNC_CLOUDFLARE_LIMIT")
+
+    if cloudflare_sub_domain is not None:
+        sync_cloudflare["sub_domain"] = cloudflare_sub_domain
+    if cloudflare_token is not None:
+        sync_cloudflare["token"] = cloudflare_token
+    if cloudflare_limit is not None:
+        sync_cloudflare["limit"] = cloudflare_limit
+
+    if sync_cloudflare.get("token"):
+        sync_cloudflare["enabled"] = True
+
 
 def build_config_data(default: dict[str, Any]) -> dict[str, Any]:
     """根据默认配置和环境变量生成配置数据。"""

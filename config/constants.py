@@ -61,5 +61,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
             "token": None,
             "commit_message": f"chore: update ips.txt on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         },
+        "cloudflare": {
+            "enabled": False,
+            "sub_domain": "@",
+            "token": None,
+            "limit": 10,
+        },
     },
 }

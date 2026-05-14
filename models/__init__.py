@@ -57,8 +57,16 @@ class GitHubSyncConfig(BaseModel):
     commit_message: str = "chore: update ips.txt"
 
 
+class CloudflareSyncConfig(BaseModel):
+    enabled: bool = False
+    sub_domain: str = "@"
+    token: Optional[str] = None
+    limit: int = 10
+
+
 class SyncConfig(BaseModel):
     github: Optional[GitHubSyncConfig] = None
+    cloudflare: Optional[CloudflareSyncConfig] = None
 
 
 class Config(BaseModel):

@@ -10,6 +10,7 @@ from typing import Any
 
 import httpx
 
+from core.sync.base import SyncError
 from models import GitHubSyncConfig
 from utils.logging import get_logger
 
@@ -19,7 +20,7 @@ GITHUB_API_BASE = "https://api.github.com"
 GITHUB_API_VERSION = "2022-11-28"
 
 
-class GitHubSyncError(RuntimeError):
+class GitHubSyncError(SyncError):
     """GitHub 同步失败。"""
 
 
@@ -101,7 +102,7 @@ async def sync_ips_to_github_from_config(
     timeout: float = 20.0,
 ) -> dict[str, Any] | None:
     """
-    根据配置同步 IP 文件。
+    根据 GitHub 配置同步 IP 文件。
 
     配置不存在、未启用、或 owner/repo 缺失时返回 None，不执行同步。
     """

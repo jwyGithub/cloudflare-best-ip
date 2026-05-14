@@ -18,6 +18,12 @@ if [ -n "${SYNC_GITHUB_TOKEN}" ]; then
 else
     echo "[entrypoint] SYNC_GITHUB_TOKEN=<empty>"
 fi
+echo "[entrypoint] SYNC_CLOUDFLARE_SUB_DOMAIN=${SYNC_CLOUDFLARE_SUB_DOMAIN:-@} SYNC_CLOUDFLARE_LIMIT=${SYNC_CLOUDFLARE_LIMIT:-<default>}"
+if [ -n "${SYNC_CLOUDFLARE_TOKEN}" ]; then
+    echo "[entrypoint] SYNC_CLOUDFLARE_TOKEN=<set>"
+else
+    echo "[entrypoint] SYNC_CLOUDFLARE_TOKEN=<empty>"
+fi
 
 # 写入 supercronic crontab
 CRONTAB_FILE="/tmp/crontab"

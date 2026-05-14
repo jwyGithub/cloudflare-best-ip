@@ -1,0 +1,4 @@
+interface:
+  display_name: "CF Best IP Config Entry"
+  short_description: "Config parsing defaults and source guide"
+  default_prompt: "Use $cloudflare-best-ip-config-entry to update configuration parsing, defaults, or built-in source handling."

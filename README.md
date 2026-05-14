@@ -13,6 +13,7 @@ A Python tool that samples IPs from Cloudflare CIDR lists, tests latency via `cd
 - Scheduled execution using supercronic inside Docker
 - Configuration via environment variables
 - Optional GitHub sync via the GitHub Contents API
+- Optional Cloudflare DNS sync for A records
 
 ## Quick Start
 
@@ -40,7 +41,7 @@ By default, the port is randomly selected from `443,2053,2083,2087,2096,8443`. S
 | `http`     | Request timeout and retries                    |
 | `geo`      | ip-api.com batch query settings                |
 | `log`      | Log level and optional log file path           |
-| `sync`     | Optional GitHub sync settings for publishing the output file |
+| `sync`     | Optional GitHub and Cloudflare DNS sync settings |
 
 Default schedule: `0 6 * * *` in `Asia/Shanghai` timezone.
 
@@ -62,6 +63,9 @@ Environment overrides:
 | `SYNC_GITHUB_BRANCH` | Branch to update                    |
 | `SYNC_GITHUB_REMOTE_PATH` | Target file path in repository |
 | `SYNC_GITHUB_TOKEN`  | GitHub token                        |
+| `SYNC_CLOUDFLARE_SUB_DOMAIN` | DNS record name to update. Defaults to `@` for the zone apex |
+| `SYNC_CLOUDFLARE_LIMIT` | Max number of unique IPs to sync to Cloudflare DNS. Defaults to `10` |
+| `SYNC_CLOUDFLARE_TOKEN` | Cloudflare API token with Zone/DNS edit permissions |
 
 ### GitHub Sync
 
@@ -76,6 +80,19 @@ SYNC_GITHUB_TOKEN=github_pat_xxx
 ```
 
 When all five values are set, GitHub sync is enabled automatically.
+
+### Cloudflare DNS Sync
+
+Cloudflare DNS sync updates A records for the first zone returned by the Cloudflare API token.
+It deletes existing A records for the target record name, then creates one A record for each unique IP in the output file.
+
+```bash
+SYNC_CLOUDFLARE_TOKEN=your-cloudflare-api-token
+```
+
+When `SYNC_CLOUDFLARE_TOKEN` is set, Cloudflare DNS sync is enabled automatically.
+`SYNC_CLOUDFLARE_SUB_DOMAIN` is optional and defaults to `@`.
+`SYNC_CLOUDFLARE_LIMIT` is optional and defaults to `10`.
 
 ## Docker
 
@@ -103,6 +120,8 @@ docker run \
   -e SYNC_GITHUB_BRANCH="main" \
   -e SYNC_GITHUB_REMOTE_PATH="ips.txt" \
   -e SYNC_GITHUB_TOKEN="github_pat_xxx" \
+  -e SYNC_CLOUDFLARE_LIMIT="10" \
+  -e SYNC_CLOUDFLARE_TOKEN="cloudflare_api_token_xxx" \
   -v ./output:/app/output \
   ghcr.io/jwygithub/cloudflare-best-ip:latest
 ```

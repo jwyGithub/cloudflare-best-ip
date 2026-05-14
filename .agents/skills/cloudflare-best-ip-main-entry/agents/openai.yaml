@@ -1,0 +1,4 @@
+interface:
+  display_name: "CF Best IP Main Entry"
+  short_description: "Main pipeline output and sync workflow guide"
+  default_prompt: "Use $cloudflare-best-ip-main-entry to modify the Cloudflare Best IP main execution pipeline."
