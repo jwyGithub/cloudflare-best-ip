@@ -14,6 +14,7 @@ Use this skill for changes centered on `main.py`, especially the end-to-end pipe
 ## Entry Files
 
 - `main.py`: owns process startup, signal handler setup, config loading, summary logs, pipeline ordering, output formatting, and sync invocation.
+- `utils/logging.py`: owns logging setup and the sanitized runtime config summary.
 - `models/__init__.py`: read when changing data passed through the pipeline.
 - `config/__init__.py`: read when changing config load or CIDR source resolution.
 - `core/*.py`: read only the core module affected by the requested pipeline behavior.
@@ -23,7 +24,8 @@ Use this skill for changes centered on `main.py`, especially the end-to-end pipe
 - Keep `main()` async and keep `asyncio.run(main())` guarded by `if __name__ == "__main__"`.
 - Call `setup_signal_handlers()` before potentially long-running scan work.
 - Load config before logging setup, then call `setup_logging(level=config.log.level, log_file=config.log.file)`.
-- Keep config summary logs secret-safe: print GitHub token only as `<set>` or `<empty>`.
+- Keep config summary logs in `utils.logging.log_config_summary`.
+- Keep config summary logs secret-safe: print sync tokens only as `<set>` or `<empty>`.
 - Let `resolve_scan_cidrs` raise `ValueError` for unknown sources and exit with status `1` from `main.py`.
 - Sort successful `TestResult` values by `avg_time` and apply `config.output.limit` before geo lookup and writing.
 - Preserve output line format: `ip:port#label`.

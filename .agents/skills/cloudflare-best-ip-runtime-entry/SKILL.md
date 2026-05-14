@@ -17,6 +17,7 @@ Docker image installs Python, uv, and supercronic -> `docker-entrypoint.sh` writ
 
 - `Dockerfile`: Python base image, supercronic install, uv install, dependency sync, copied app files, entrypoint.
 - `docker-entrypoint.sh`: runtime env logging, cron file generation, immediate run, supercronic startup.
+- `utils/logging.py`: Python runtime log formatting and config summary output.
 - `docker-compose.yml`: user-facing container env and mounted `./output:/app/output`.
 - `.github/workflows/docker.yml`: image build and GHCR publishing.
 - `README.md`: Docker usage, env vars, release instructions.
@@ -27,6 +28,7 @@ Docker image installs Python, uv, and supercronic -> `docker-entrypoint.sh` writ
 - Keep `PYTHONPATH=/app` in the image so package imports work from `/app`.
 - Keep `/app/output` as the container volume and document `output/...` paths for compose users.
 - Keep Docker startup behavior: log env summary, run once immediately, then start supercronic.
+- Keep `docker-entrypoint.sh` focused on scheduler startup; avoid duplicating business config already logged by `main.py`.
 - Never print sync tokens such as `SYNC_GITHUB_TOKEN` or `SYNC_CLOUDFLARE_TOKEN`; show only `<set>` or `<empty>`.
 - Keep schedule defaults aligned across `config/constants.py`, `docker-entrypoint.sh`, `docker-compose.yml`, and `README.md`.
 - Keep dependency installs reproducible with `uv sync --frozen --no-dev --no-install-project`.
