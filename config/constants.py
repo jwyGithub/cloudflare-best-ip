@@ -39,14 +39,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "retries": 3,
         "retry_delay": 1.0,
     },
-    "geo": {
-        "url": "http://ip-api.com/batch",
-        "batch_limit": 100,
-        "fields": "status,countryCode,region,query",
-        "timeout": 10.0,
-        "retries": 3,
-        "retry_delay": 1.0,
-    },
     "schedule": {
         "cron": "0 6 * * *",
         "timezone": "Asia/Shanghai",

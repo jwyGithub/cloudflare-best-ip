@@ -33,15 +33,6 @@ class HttpConfig(BaseModel):
     retry_delay: float = 1.0
 
 
-class GeoConfig(BaseModel):
-    url: str = "http://ip-api.com/batch"
-    batch_limit: int = 100
-    fields: str = "status,countryCode,region,query"
-    timeout: float = 10.0
-    retries: int = 3
-    retry_delay: float = 1.0
-
-
 class ScheduleConfig(BaseModel):
     cron: str = "0 6 * * *"    # cron 表达式，默认 Asia/Shanghai 每天 06:00
     timezone: str = "Asia/Shanghai"  # IANA 时区名称
@@ -74,7 +65,6 @@ class Config(BaseModel):
     output: OutputConfig = Field(default_factory=OutputConfig)
     log: LogConfig = Field(default_factory=LogConfig)
     http: HttpConfig = Field(default_factory=HttpConfig)
-    geo: GeoConfig = Field(default_factory=GeoConfig)
     schedule: ScheduleConfig = Field(default_factory=ScheduleConfig)
     sync: Optional[SyncConfig] = None
 

@@ -45,8 +45,7 @@ async def main() -> None:
     limit = config.output.limit
     top = sorted(results, key=lambda r: r.avg_time)[:limit]
 
-    unique_ips = list({r.ip for r in top})
-    geo_map = await batch_geo_lookup(unique_ips, config.geo)
+    geo_map = await batch_geo_lookup(top)
 
     output_path = Path(__file__).parent / config.output.path
     output_path.parent.mkdir(parents=True, exist_ok=True)
