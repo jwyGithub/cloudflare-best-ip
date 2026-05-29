@@ -52,7 +52,7 @@ Core flow:
 
 - If changing `TestResult`, update `main.py` output handling and any sort/filter logic.
 - If changing trace parsing, keep key-value parsing tolerant of unknown Cloudflare fields.
-- If changing geo fields, update `config.constants.DEFAULT_CONFIG["geo"]["fields"]` and `GeoInfo`.
+- If changing geo fields, update the relevant config class in `config/config.py` and `GeoInfo`.
 - If adding a new publisher, create a new `core/sync/<platform>.py` module, add config fields in `models.SyncConfig`, and dispatch it from `core/sync/manager.py`.
 - If randomness becomes test-sensitive, inject or seed randomness at the smallest practical boundary.
 

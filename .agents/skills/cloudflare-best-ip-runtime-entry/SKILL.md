@@ -30,7 +30,8 @@ Docker image installs Python, uv, and supercronic -> `docker-entrypoint.sh` writ
 - Keep Docker startup behavior: log env summary, run once immediately, then start supercronic.
 - Keep `docker-entrypoint.sh` focused on scheduler startup; avoid duplicating business config already logged by `main.py`.
 - Never print sync tokens such as `SYNC_GITHUB_TOKEN` or `SYNC_CLOUDFLARE_TOKEN`; show only `<set>` or `<empty>`.
-- Keep schedule defaults aligned across `config/constants.py`, `docker-entrypoint.sh`, `docker-compose.yml`, and `README.md`.
+- Keep schedule defaults aligned across `config/config.py`, `docker-entrypoint.sh`, `docker-compose.yml`, and `README.md`.
+- Keep console color output TTY-aware in `utils/logging.py`; scheduled supercronic logs should not contain escaped ANSI sequences.
 - Keep dependency installs reproducible with `uv sync --frozen --no-dev --no-install-project`.
 - If adding Python package files, ensure `Dockerfile` copies them into `/app`.
 

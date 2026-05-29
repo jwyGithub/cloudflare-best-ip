@@ -29,9 +29,9 @@ uv run python main.py
 
 ## Configuration
 
-Defaults are defined in `config/constants.py`. Override values with environment variables.
-`SCAN_SOURCE` is only read from the environment. Source names come from `config/source/*.txt`; if unset or empty, `cloudflare` is used.
-By default, the port is randomly selected from `443,2053,2083,2087,2096,8443`. Set `SCAN_PORT=443` to force a fixed port at runtime. If `SCAN_PORT` is empty or invalid, the default random port pool is used.
+Defaults are defined by class-based config objects in `config/config.py`. `EnvConfig` reads environment variables once at startup, and `AppConfig` resolves them into the runtime `models.Config` used by the scanner.
+`SCAN_SOURCE` is read from the environment and maps to built-in source files in `config/source/*.txt`; if unset or empty, `cloudflare` is used.
+By default, each sampled IP uses a random port from `443,2053,2083,2087,2096,8443`. Set `SCAN_PORT=443` to force a fixed port, or `SCAN_PORT=443,8443` to use a smaller port pool. If `SCAN_PORT` is empty or contains no valid ports, the default random port pool is used.
 
 | Section    | Description                                    |
 | ---------- | ---------------------------------------------- |
@@ -127,6 +127,10 @@ docker run \
 ```
 
 Omit `SCAN_PORT` to randomly select from the built-in port pool.
+
+### Docker Logs
+
+Container logs are plain text when captured by Docker or supercronic. ANSI color output is only enabled when Python logs directly to an interactive TTY, so scheduled runs do not emit escaped color sequences such as `\x1b[32m`.
 
 ## Publishing a Release
 

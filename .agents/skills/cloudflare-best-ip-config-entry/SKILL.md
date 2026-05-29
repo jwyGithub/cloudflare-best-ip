@@ -1,6 +1,6 @@
 ---
 name: cloudflare-best-ip-config-entry
-description: Project-specific guidance for Cloudflare Best IP configuration modules. Use when changing environment variable parsing, Pydantic config models, default constants, built-in source files, SCAN_SOURCE or SCAN_PORT behavior, or README configuration documentation.
+description: Project-specific guidance for Cloudflare Best IP configuration modules. Use when changing environment variable parsing, class-based config defaults, Pydantic config models, built-in source files, SCAN_SOURCE or SCAN_PORT behavior, or README configuration documentation.
 ---
 
 # Cloudflare Best IP Config Entry
@@ -11,12 +11,12 @@ Use this skill for changes centered on the configuration package and config mode
 
 The config flow is:
 
-`config/constants.py` defaults -> `config/parse.py` environment overrides -> `Config.model_validate(...)` -> `config/__init__.py` source resolution.
+`EnvConfig.from_os()` -> `AppConfig().resolve(env)` -> `models.Config` -> `config/__init__.py` source resolution.
 
 ## Entry Files
 
-- `config/constants.py`: default values, built-in port pool, built-in source loading, default sync settings.
-- `config/parse.py`: environment variable parsing and overrides.
+- `config/config.py`: class-based default values, `EnvConfig`, `AppConfig`, environment parsing, and runtime `models.Config` resolution.
+- `config/constants.py`: compatibility exports for built-in source loading only; do not add runtime defaults here.
 - `config/__init__.py`: public config API, especially `load_config()` and `resolve_scan_cidrs()`.
 - `config/source/*.txt`: built-in CIDR source names; file stem is the source name.
 - `models/__init__.py`: Pydantic models that must match config data.
@@ -33,7 +33,8 @@ The config flow is:
 - Enable Cloudflare DNS sync when token is present; `sub_domain` defaults to `@` and may be overridden by `SYNC_CLOUDFLARE_SUB_DOMAIN`.
 - Keep Cloudflare DNS `limit` positive; it defaults to `10` and may be overridden by `SYNC_CLOUDFLARE_LIMIT`.
 - Do not log raw tokens in config summaries or runtime scripts.
-- Keep `DEFAULT_CONFIG` keys aligned with `models.Config`; add model fields and defaults together.
+- Keep defaults in the closest domain config class in `config/config.py`; `AppConfig` should compose classes, not duplicate defaults.
+- Keep `AppConfig.resolve(...)` output aligned with `models.Config`; add model fields and config defaults together.
 
 ## Built-In Sources
 
@@ -44,10 +45,10 @@ The config flow is:
 
 ## Editing Guidance
 
-- For a new env var, update four places together: `models/__init__.py`, `config/constants.py`, `config/parse.py`, and `README.md`.
+- For a new env var, update `EnvConfig`, the relevant domain config class in `config/config.py`, `models/__init__.py` when the runtime shape changes, and `README.md`.
 - If Docker users need the env var, also update `docker-compose.yml` and `docker-entrypoint.sh`.
 - Avoid hidden config aliases unless there is a compatibility requirement; document any alias in `README.md`.
-- Prefer Pydantic validation for structural config shape and small parser helpers for env string conversion.
+- Prefer Pydantic validation for structural config shape and small `EnvConfig` parser helpers for env string conversion.
 
 ## Verification
 

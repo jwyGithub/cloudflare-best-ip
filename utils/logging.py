@@ -34,6 +34,7 @@ def setup_logging(level: str = "INFO", log_file: Optional[str] = None) -> Any:
     global _root_logger
 
     log_level = _normalize_level(level)
+    colorize = sys.stderr.isatty()
 
     _logger.remove()
     _logger.configure(extra={"name": "best"})
@@ -45,7 +46,7 @@ def setup_logging(level: str = "INFO", log_file: Optional[str] = None) -> Any:
             "<level>{level: <8}</level> | "
             "<cyan>{extra[name]}</cyan> | <level>{message}</level>"
         ),
-        colorize=True,
+        colorize=colorize,
         backtrace=True,
         diagnose=False,
     )

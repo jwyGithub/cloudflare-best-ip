@@ -36,7 +36,7 @@ Use this skill for changes centered on `main.py`, especially the end-to-end pipe
 
 - If adding a pipeline step, decide whether it belongs before latency testing, after ranking, after geo enrichment, or after local write.
 - If changing output format, update `README.md`, Docker examples, and any sync assumptions that consume the generated text file.
-- If adding config-controlled behavior, update `models.Config`, `config/constants.py`, `config/parse.py`, and the config summary logs together.
+- If adding config-controlled behavior, update `models.Config`, the relevant class in `config/config.py`, and the config summary logs together.
 - If adding new external network calls, use async `httpx.AsyncClient`, timeouts from config, and clear failure logs.
 
 ## Verification
