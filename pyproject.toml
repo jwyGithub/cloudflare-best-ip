@@ -1,6 +1,6 @@
 [project]
 name = "cloudflare-best-ip"
-version = "0.0.9"
+version = "0.0.15"
 description = "Cloudflare IP 优选工具"
 requires-python = ">=3.12"
 dependencies = [
