@@ -27,17 +27,6 @@ def _parse_ip_entry(entry: str) -> tuple[str, str, str]:
     ip, port = ip_port.rsplit(":", 1)
     return ip, port, remark
 
-
-def _parse_trace(text: str) -> dict[str, str]:
-    """解析 Cloudflare cdn-cgi/trace 的 key=value 格式响应。"""
-    data: dict[str, str] = {}
-    for line in text.strip().splitlines():
-        if "=" in line:
-            k, v = line.split("=", 1)
-            data[k.strip()] = v.strip()
-    return data
-
-
 async def _test_single_ip(
     entry: str, client: httpx.AsyncClient, test_url_tpl: str
 ) -> Optional[TestResult]:
@@ -70,7 +59,7 @@ async def _test_single_ip(
             # 第 0 次：解析 trace body，不计入延迟（DNS 预热）
             # 第 1、2 次：计入延迟，无需重复解析 body
             if i == 0:
-                trace_data = _parse_trace(resp.text)
+                trace_data = resp.json()
             else:
                 times.append(elapsed)
 

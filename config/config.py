@@ -151,7 +151,7 @@ class ScanConfig(BaseModel):
 
     concurrency: int = 8
     total: int = 512
-    test_url: str = "https://{hex_ip}.nip.lfree.org:{port}/cdn-cgi/trace"
+    test_url: str = "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json"
 
     def resolve_concurrency(self, env: EnvConfig) -> int:
         return (
