@@ -24,5 +24,5 @@ def get_random_port(ports: list[int]) -> int:
 
 
 def ip_to_hex(ip: str) -> str:
-    """将点分十进制 IPv4 地址转换为 8 位十六进制字符串（无分隔符）。"""
-    return "".join(f"{int(octet):02x}" for octet in ip.split("."))
+    """将点分十进制 IPv4 地址转换为 JS 版本一致的 8 位大写十六进制标签。"""
+    return "".join(f"{int(octet):02X}" for octet in ip.split("."))

@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from config import load_config, resolve_scan_cidrs
 from config.config import AppConfig, EnvConfig
+from models import ScanConfig as RuntimeScanConfig
 
 
 class ConfigLoadingTests(unittest.TestCase):
@@ -17,6 +18,10 @@ class ConfigLoadingTests(unittest.TestCase):
         self.assertEqual(config.scan.ports, [443, 2053, 2083, 2087, 2096, 8443])
         self.assertEqual(config.scan.concurrency, 8)
         self.assertEqual(config.scan.total, 512)
+        self.assertEqual(
+            config.scan.test_url,
+            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
+        )
         self.assertEqual(config.output.path, "output/ips.txt")
         self.assertEqual(config.output.limit, 60)
         self.assertEqual(config.log.level, "INFO")
@@ -61,7 +66,7 @@ class ConfigLoadingTests(unittest.TestCase):
         self.assertEqual(config.scan.ports, [443, 8443])
         self.assertEqual(config.scan.concurrency, 2)
         self.assertEqual(config.scan.total, 30)
-        self.assertEqual(len(resolve_scan_cidrs(config)), 14)
+        self.assertEqual(len(resolve_scan_cidrs(config)), len(AppConfig().source.sources["cm"]))
 
     def test_invalid_scan_port_falls_back_to_default_pool(self) -> None:
         with patch.dict(os.environ, {"SCAN_PORT": "abc,70000"}, clear=True):
@@ -104,6 +109,12 @@ class ConfigLoadingTests(unittest.TestCase):
 
         self.assertIn("cloudflare", app_config.source.sources)
         self.assertIn("cm", app_config.source.sources)
+
+    def test_runtime_scan_config_default_test_url_matches_js_probe_url(self) -> None:
+        self.assertEqual(
+            RuntimeScanConfig().test_url,
+            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
+        )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-IP 测试：并发测试 ip:port 的可用性和延迟，通过 cdn-cgi/trace 获取 colo 信息。
+IP 测试：并发测试 ip:port 的可用性和延迟，通过 /ip.json 获取 colo 信息。
 """
 
 from __future__ import annotations
@@ -27,11 +27,36 @@ def _parse_ip_entry(entry: str) -> tuple[str, str, str]:
     ip, port = ip_port.rsplit(":", 1)
     return ip, port, remark
 
+def _with_cache_buster(url: str) -> str:
+    separator = "&" if "?" in url else "?"
+    return f"{url}{separator}_t={int(time.time() * 1000)}"
+
+
+async def _test_options_connectivity(
+    url: str,
+    client: httpx.AsyncClient,
+    timeout_seconds: float,
+) -> bool:
+    """按 JS 版本逻辑执行 OPTIONS 连通性预检，最多尝试 3 次。"""
+    for attempt in range(3):
+        try:
+            resp = await client.options(url, timeout=timeout_seconds * 2)
+            if resp.is_success:
+                return True
+            logger.debug("OPTIONS 预检失败: {} (HTTP {}, 第 {} 次)", url, resp.status_code, attempt + 1)
+        except Exception as exc:
+            logger.debug("OPTIONS 预检异常: {} (第 {} 次): {}", url, attempt + 1, exc)
+    return False
+
+
 async def _test_single_ip(
-    entry: str, client: httpx.AsyncClient, test_url_tpl: str
+    entry: str,
+    client: httpx.AsyncClient,
+    test_url_tpl: str,
+    timeout_seconds: float,
 ) -> Optional[TestResult]:
     """
-    测试单个 ip:port，共请求 3 次，丢弃第 1 次（DNS 预热），取后 2 次均值。
+    测试单个 ip:port：先 OPTIONS 预检，再对单次 GET /ip.json 计时。
 
     使用外部传入的 AsyncClient 以复用连接池，避免每次重建开销。
     test_url_tpl 来自 config.scan.test_url，含 {hex_ip} 和 {port} 占位符。
@@ -40,50 +65,38 @@ async def _test_single_ip(
     hex_ip = ip_to_hex(ip)
     base_url = test_url_tpl.format(hex_ip=hex_ip, port=port)
 
-    times: list[float] = []
-    trace_data: Optional[dict[str, str]] = None
-
-    for i in range(3):
-        url = f"{base_url}?_t={int(time.time() * 1000)}"
-        try:
-            start = time.perf_counter()
-            resp = await client.get(url)
-            elapsed = (time.perf_counter() - start) * 1000  # ms
-
-            if not resp.is_success:
-                if i == 0:
-                    logger.debug("IP {}:{} 首次请求失败 (HTTP {})", ip, port, resp.status_code)
-                    return None
-                continue
-
-            # 第 0 次：解析 trace body，不计入延迟（DNS 预热）
-            # 第 1、2 次：计入延迟，无需重复解析 body
-            if i == 0:
-                trace_data = resp.json()
-            else:
-                times.append(elapsed)
-
-        except Exception as exc:
-            if i == 0:
-                logger.debug("IP {}:{} 首次请求异常: {}", ip, port, exc)
-                return None
-            logger.debug("IP {}:{} 第 {} 次请求异常: {}", ip, port, i + 1, exc)
-
-    if trace_data is None or not times:
+    url = _with_cache_buster(base_url)
+    if not await _test_options_connectivity(url, client, timeout_seconds):
+        logger.debug("IP {}:{} OPTIONS 预检不可用", ip, port)
         return None
 
-    avg_time = round(sum(times) / len(times))
+    try:
+        start = time.perf_counter()
+        resp = await client.get(url, timeout=timeout_seconds)
+        if not resp.is_success:
+            logger.debug("IP {}:{} GET 请求失败 (HTTP {})", ip, port, resp.status_code)
+            return None
+        trace_data = resp.json()
+        elapsed = max(1, round((time.perf_counter() - start) * 1000))
+    except Exception as exc:
+        logger.debug("IP {}:{} GET 请求异常: {}", ip, port, exc)
+        return None
+
+    if elapsed > timeout_seconds * 1000:
+        logger.debug("IP {}:{} 延迟超过超时时间: {}ms", ip, port, elapsed)
+        return None
+
     result = TestResult(
         ip=ip,
         port=port,
         remark=remark,
         response_ip=trace_data.get("ip", ip),
         colo=trace_data.get("colo", ""),
-        avg_time=avg_time,
+        avg_time=elapsed,
     )
     logger.info(
-        "测试成功  {}:{} - 平均响应 {}ms, colo={}, 响应 IP: {}",
-        ip, port, avg_time, result.colo, result.response_ip,
+        "测试成功  {}:{} - 响应 {}ms, colo={}, 响应 IP: {}",
+        ip, port, elapsed, result.colo, result.response_ip,
     )
     return result
 
@@ -123,7 +136,7 @@ async def test_ips(ips: List[str], config: Config) -> List[TestResult]:
         async def _bounded(entry: str) -> None:
             nonlocal success, fail
             async with semaphore:
-                res = await _test_single_ip(entry, client, test_url_tpl)
+                res = await _test_single_ip(entry, client, test_url_tpl, float(config.http.timeout))
             async with lock:
                 if res:
                     results.append(res)
