@@ -222,3 +222,5 @@ config.yaml
 result.txt
 ips.txt
 output/
+cfdata-darwin-arm64
+.cfdata

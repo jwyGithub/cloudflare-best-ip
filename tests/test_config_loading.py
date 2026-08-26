@@ -18,10 +18,14 @@ class ConfigLoadingTests(unittest.TestCase):
         self.assertEqual(config.scan.ports, [443, 2053, 2083, 2087, 2096, 8443])
         self.assertEqual(config.scan.concurrency, 8)
         self.assertEqual(config.scan.total, 512)
-        self.assertEqual(
-            config.scan.test_url,
-            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
-        )
+        self.assertEqual(config.scan.cfdata_bin, "cfdata")
+        self.assertEqual(config.scan.scan_mode, "tcping")
+        self.assertTrue(config.scan.enable_tls)
+        self.assertEqual(config.scan.delay_threshold, 500)
+        self.assertEqual(config.scan.speed_url, "auto")
+        self.assertEqual(config.scan.speed_test_threads, 1)
+        self.assertEqual(config.scan.speed_min, 0.1)
+        self.assertEqual(config.scan.speed_limit, 5)
         self.assertEqual(config.output.path, "output/ips.txt")
         self.assertEqual(config.output.limit, 60)
         self.assertEqual(config.log.level, "INFO")
@@ -110,11 +114,37 @@ class ConfigLoadingTests(unittest.TestCase):
         self.assertIn("cloudflare", app_config.source.sources)
         self.assertIn("cm", app_config.source.sources)
 
-    def test_runtime_scan_config_default_test_url_matches_js_probe_url(self) -> None:
-        self.assertEqual(
-            RuntimeScanConfig().test_url,
-            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
-        )
+    def test_cfdata_env_overrides_scan_config(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "CFDATA_BIN": "/usr/local/bin/cfdata",
+                "SCAN_MODE": "httping",
+                "SCAN_ENABLE_TLS": "false",
+                "DELAY_THRESHOLD": "300",
+                "SPEED_URL": "speed.cloudflare.com/__down?bytes=99999999",
+                "SPEED_TEST_THREADS": "0",
+                "SPEED_MIN": "1.5",
+                "SPEED_LIMIT": "0",
+            },
+            clear=True,
+        ):
+            config = load_config()
+
+        self.assertEqual(config.scan.cfdata_bin, "/usr/local/bin/cfdata")
+        self.assertEqual(config.scan.scan_mode, "httping")
+        self.assertFalse(config.scan.enable_tls)
+        self.assertEqual(config.scan.delay_threshold, 300)
+        self.assertEqual(config.scan.speed_url, "speed.cloudflare.com/__down?bytes=99999999")
+        self.assertEqual(config.scan.speed_test_threads, 0)
+        self.assertEqual(config.scan.speed_min, 1.5)
+        self.assertEqual(config.scan.speed_limit, 0)
+
+    def test_runtime_scan_config_defaults(self) -> None:
+        scan = RuntimeScanConfig()
+        self.assertEqual(scan.cfdata_bin, "cfdata")
+        self.assertEqual(scan.scan_mode, "tcping")
+        self.assertEqual(scan.speed_test_threads, 1)
 
 
 if __name__ == "__main__":

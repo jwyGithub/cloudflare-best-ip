@@ -2,13 +2,14 @@
 
 [![Build & Publish Docker Image](https://github.com/jwyGithub/cloudflare-best-ip/actions/workflows/docker.yml/badge.svg)](https://github.com/jwyGithub/cloudflare-best-ip/actions/workflows/docker.yml)
 
-A Python tool that samples IPs from Cloudflare CIDR lists, tests latency via `cdn-cgi/trace`, enriches results with geo info, and writes the best IPs to a plain-text file — scheduled automatically via Docker + supercronic.
+A Python tool that samples IPs from Cloudflare CIDR lists, tests latency / packet loss / download speed via the [CFData](https://github.com/PoemMisty/CFData-WEB) CLI, enriches results with geo info, and writes the best IPs to a plain-text file — scheduled automatically via Docker + supercronic.
 
 ## Features
 
 - Samples IPs from built-in CIDR sources
-- Concurrent latency testing with `asyncio` (concurrency controlled by `scan.concurrency`)
-- Geo lookup via [ip-api.com](http://ip-api.com) batch API
+- Latency, packet-loss and download-speed testing delegated to the CFData CLI (non-standard / `nsb` mode)
+- Supports TCPing (default) and HTTPing latency modes
+- Geo lookup via Cloudflare speed locations
 - Output format: `ip:port#CountryCode-Region` (e.g. `1.2.3.4:443#CN-Guangdong`)
 - Scheduled execution using supercronic inside Docker
 - Configuration via environment variables
@@ -27,15 +28,28 @@ To run locally with [uv](https://github.com/astral-sh/uv):
 uv run python main.py
 ```
 
+Local runs require the CFData CLI binary. Download the build for your platform from the
+[CFData releases](https://github.com/PoemMisty/CFData-WEB/releases/latest), make it executable, and
+either add it to your `PATH` as `cfdata` or point `CFDATA_BIN` at it:
+
+```bash
+export CFDATA_BIN=/path/to/cfdata-darwin-arm64
+uv run python main.py
+```
+
+CFData stores its input/output and local cache (IP database, locations, ASN data) under a `.cfdata`
+directory in the working directory. The Docker image already bundles the CFData binary.
+
 ## Configuration
 
 Defaults are defined by class-based config objects in `config/config.py`. `EnvConfig` reads environment variables once at startup, and `AppConfig` resolves them into the runtime `models.Config` used by the scanner.
 `SCAN_SOURCE` is read from the environment and maps to built-in source files in `config/source/*.txt`; if unset or empty, `cloudflare` is used.
 By default, each sampled IP uses a random port from `443,2053,2083,2087,2096,8443`. Set `SCAN_PORT=443` to force a fixed port, or `SCAN_PORT=443,8443` to use a smaller port pool. If `SCAN_PORT` is empty or contains no valid ports, the default random port pool is used.
+Latency, packet loss and download speed are measured by invoking the CFData CLI in non-standard (`nsb`) mode: sampled IPs are written to a temporary input file, CFData tests them, and its CSV output is parsed back into results. Results are ranked by latency (lowest first). Download speed is optional and only tested for the top `SPEED_LIMIT` candidates.
 
 | Section    | Description                                    |
 | ---------- | ---------------------------------------------- |
-| `scan`     | Ports, concurrency, sample size                          |
+| `scan`     | Ports, concurrency, sample size, and CFData CLI test settings |
 | `schedule` | Cron expression and timezone for Docker scheduling |
 | `output`   | Output file path and max number of IPs to keep. Use `output/...` with Docker Compose so files land in the mounted `./output` directory |
 | `http`     | Request timeout and retries                    |
@@ -51,10 +65,19 @@ Environment overrides:
 | -------------------- | ----------------------------------- |
 | `SCAN_SOURCE`        | Built-in source name from `config/source/*.txt`, e.g. `cloudflare` |
 | `SCAN_PORT`          | Fixed port; unset or invalid means random port |
-| `SCAN_CONCURRENCY`   | Number of concurrent latency test coroutines |
+| `SCAN_CONCURRENCY`   | CFData scan threads (`-nsbthreads`) |
 | `SCAN_TOTAL`         | Number of sampled IPs               |
 | `SCAN_OUTPUT_PATH`   | Output file path                    |
 | `SCAN_OUTPUT_LIMIT`  | Max number of IPs to keep           |
+| `CFDATA_BIN`         | Path to the CFData CLI binary (defaults to `cfdata` on `PATH`) |
+| `SCAN_MODE`          | Latency mode: `tcping` (default) or `httping` |
+| `SCAN_ENABLE_TLS`    | Whether CFData uses TLS (`true`/`false`, default `true`) |
+| `DELAY_THRESHOLD`    | Latency threshold in ms (`-nsbdelay`, default `500`) |
+| `SCAN_RESULT_LIMIT`  | Max latency-qualified results (`-nsbresultlimit`, default `1000`) |
+| `SPEED_URL`          | Speed-test download URL; `auto` lets CFData choose (default `auto`) |
+| `SPEED_TEST_THREADS` | Speed-test threads; `0` disables speed testing (default `1`) |
+| `SPEED_MIN`          | Minimum qualifying speed in MB/s (default `0.1`) |
+| `SPEED_LIMIT`        | Max speed-tested results; `0` disables speed testing (default `5`) |
 | `SCHEDULE_CRON`      | Cron expression                     |
 | `SCHEDULE_TIMEZONE`  | IANA timezone name                  |
 | `LOG_LEVEL`          | `DEBUG`, `INFO`, `WARNING`, `ERROR` |

@@ -52,6 +52,43 @@ def _parse_positive_int(name: str, value: str | None) -> int | None:
     return number
 
 
+def _parse_non_negative_int(name: str, value: str | None) -> int | None:
+    """解析非负整数环境变量值（允许 0）。"""
+    if value is None:
+        return None
+
+    try:
+        number = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{name} 环境变量必须是非负整数: {value}") from exc
+
+    if number < 0:
+        raise ValueError(f"{name} 环境变量不能为负数: {number}")
+    return number
+
+
+def _parse_positive_float(name: str, value: str | None) -> float | None:
+    """解析正浮点数环境变量值。"""
+    if value is None:
+        return None
+
+    try:
+        number = float(value)
+    except ValueError as exc:
+        raise ValueError(f"{name} 环境变量必须是数字: {value}") from exc
+
+    if number <= 0:
+        raise ValueError(f"{name} 环境变量必须大于 0: {number}")
+    return number
+
+
+def _parse_bool(value: str | None) -> bool | None:
+    """解析布尔环境变量值。"""
+    if value is None:
+        return None
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 class EnvConfig(BaseModel):
     """环境变量快照。"""
 
@@ -61,6 +98,15 @@ class EnvConfig(BaseModel):
     scan_total: str | None = None
     scan_output_path: str | None = None
     scan_output_limit: str | None = None
+    cfdata_bin: str | None = None
+    scan_mode: str | None = None
+    scan_enable_tls: str | None = None
+    delay_threshold: str | None = None
+    scan_result_limit: str | None = None
+    speed_url: str | None = None
+    speed_test_threads: str | None = None
+    speed_min: str | None = None
+    speed_limit: str | None = None
     schedule_cron: str | None = None
     schedule_timezone: str | None = None
     log_level: str | None = None
@@ -83,6 +129,15 @@ class EnvConfig(BaseModel):
             scan_total=_env_value("SCAN_TOTAL"),
             scan_output_path=_env_value("SCAN_OUTPUT_PATH"),
             scan_output_limit=_env_value("SCAN_OUTPUT_LIMIT"),
+            cfdata_bin=_env_value("CFDATA_BIN"),
+            scan_mode=_env_value("SCAN_MODE"),
+            scan_enable_tls=_env_value("SCAN_ENABLE_TLS"),
+            delay_threshold=_env_value("DELAY_THRESHOLD"),
+            scan_result_limit=_env_value("SCAN_RESULT_LIMIT"),
+            speed_url=_env_value("SPEED_URL"),
+            speed_test_threads=_env_value("SPEED_TEST_THREADS"),
+            speed_min=_env_value("SPEED_MIN"),
+            speed_limit=_env_value("SPEED_LIMIT"),
             schedule_cron=_env_value("SCHEDULE_CRON"),
             schedule_timezone=_env_value("SCHEDULE_TIMEZONE"),
             log_level=_env_value("LOG_LEVEL"),
@@ -147,11 +202,19 @@ class PortConfig(BaseModel):
 
 
 class ScanConfig(BaseModel):
-    """扫描行为配置。"""
+    """扫描行为配置（含 CFData CLI 测速参数）。"""
 
     concurrency: int = 8
     total: int = 512
-    test_url: str = "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json"
+    cfdata_bin: str = "cfdata"
+    scan_mode: str = "tcping"
+    enable_tls: bool = True
+    delay_threshold: int = 500
+    result_limit: int = 1000
+    speed_url: str = "auto"
+    speed_test_threads: int = 1
+    speed_min: float = 0.1
+    speed_limit: int = 5
 
     def resolve_concurrency(self, env: EnvConfig) -> int:
         return (
@@ -161,6 +224,42 @@ class ScanConfig(BaseModel):
 
     def resolve_total(self, env: EnvConfig) -> int:
         return _parse_positive_int("SCAN_TOTAL", env.scan_total) or self.total
+
+    def resolve_cfdata_bin(self, env: EnvConfig) -> str:
+        return env.cfdata_bin or self.cfdata_bin
+
+    def resolve_scan_mode(self, env: EnvConfig) -> str:
+        return (env.scan_mode or self.scan_mode).strip().lower()
+
+    def resolve_enable_tls(self, env: EnvConfig) -> bool:
+        parsed = _parse_bool(env.scan_enable_tls)
+        return self.enable_tls if parsed is None else parsed
+
+    def resolve_delay_threshold(self, env: EnvConfig) -> int:
+        return (
+            _parse_positive_int("DELAY_THRESHOLD", env.delay_threshold)
+            or self.delay_threshold
+        )
+
+    def resolve_result_limit(self, env: EnvConfig) -> int:
+        return (
+            _parse_positive_int("SCAN_RESULT_LIMIT", env.scan_result_limit)
+            or self.result_limit
+        )
+
+    def resolve_speed_url(self, env: EnvConfig) -> str:
+        return env.speed_url or self.speed_url
+
+    def resolve_speed_test_threads(self, env: EnvConfig) -> int:
+        parsed = _parse_non_negative_int("SPEED_TEST_THREADS", env.speed_test_threads)
+        return self.speed_test_threads if parsed is None else parsed
+
+    def resolve_speed_min(self, env: EnvConfig) -> float:
+        return _parse_positive_float("SPEED_MIN", env.speed_min) or self.speed_min
+
+    def resolve_speed_limit(self, env: EnvConfig) -> int:
+        parsed = _parse_non_negative_int("SPEED_LIMIT", env.speed_limit)
+        return self.speed_limit if parsed is None else parsed
 
 
 class OutputConfig(BaseModel):
@@ -294,7 +393,15 @@ class AppConfig(BaseModel):
                 ports=self.port.resolve_ports(env),
                 concurrency=self.scan.resolve_concurrency(env),
                 total=self.scan.resolve_total(env),
-                test_url=self.scan.test_url,
+                cfdata_bin=self.scan.resolve_cfdata_bin(env),
+                scan_mode=self.scan.resolve_scan_mode(env),
+                enable_tls=self.scan.resolve_enable_tls(env),
+                delay_threshold=self.scan.resolve_delay_threshold(env),
+                result_limit=self.scan.resolve_result_limit(env),
+                speed_url=self.scan.resolve_speed_url(env),
+                speed_test_threads=self.scan.resolve_speed_test_threads(env),
+                speed_min=self.scan.resolve_speed_min(env),
+                speed_limit=self.scan.resolve_speed_limit(env),
             ),
             output=RuntimeOutputConfig(
                 path=self.output.resolve_path(env),
