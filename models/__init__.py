@@ -14,7 +14,7 @@ class ScanConfig(BaseModel):
     concurrency: int = 8            # 并发测试协程数
     total: int = 512                # 从 CIDR 采样的 IP 总数
     # {hex_ip} 和 {port} 为占位符，运行时动态替换；默认值对齐 index.html 的 testLatency。
-    test_url: str = "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json"
+    test_url: str = "https://{hex_ip}.bestcf.cmliussss.hidns.vip:{port}/ip.json"
 
 
 class OutputConfig(BaseModel):

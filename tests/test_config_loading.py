@@ -20,7 +20,7 @@ class ConfigLoadingTests(unittest.TestCase):
         self.assertEqual(config.scan.total, 512)
         self.assertEqual(
             config.scan.test_url,
-            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
+            "https://{hex_ip}.bestcf.cmliussss.hidns.vip:{port}/ip.json",
         )
         self.assertEqual(config.output.path, "output/ips.txt")
         self.assertEqual(config.output.limit, 60)
@@ -113,7 +113,7 @@ class ConfigLoadingTests(unittest.TestCase):
     def test_runtime_scan_config_default_test_url_matches_js_probe_url(self) -> None:
         self.assertEqual(
             RuntimeScanConfig().test_url,
-            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
+            "https://{hex_ip}.bestcf.cmliussss.hidns.vip:{port}/ip.json",
         )
 
 

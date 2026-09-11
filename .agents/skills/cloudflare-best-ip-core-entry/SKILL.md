@@ -33,7 +33,7 @@ Core flow:
 - CIDR sampling currently supports IPv4 via `ipaddress.IPv4Network`; expand models and test URL behavior before adding IPv6.
 - `test_ips` accepts `list[str]` entries in `ip:port` or `ip:port#remark` form and returns `list[TestResult]`.
 - `_test_single_ip` matches `index.html` `testLatency`: build one cache-busted `/ip.json` URL, run OPTIONS preflight up to 3 times with `timeout * 2`, then time one successful GET including JSON parsing.
-- `config.scan.test_url` must support `{hex_ip}` and `{port}` placeholders and default to `https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json`.
+- `config.scan.test_url` must support `{hex_ip}` and `{port}` placeholders and default to `https://{hex_ip}.bestcf.cmliussss.hidns.vip:{port}/ip.json`.
 - `utils.ip_to_hex` returns the uppercase IPv4 hex label used by the JS probe URL.
 - `batch_geo_lookup` returns `dict[ip, GeoInfo]` and must tolerate failed batches by returning fail entries.
 - `GeoInfo.label` should stay compatible with `main.py` output labels.

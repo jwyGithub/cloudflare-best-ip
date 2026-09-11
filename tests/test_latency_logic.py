@@ -38,7 +38,7 @@ class LatencyLogicTests(unittest.IsolatedAsyncioTestCase):
         result = await _test_single_ip(
             "1.2.3.4:443#remark",
             client,  # type: ignore[arg-type]
-            "https://{hex_ip}.nip.cmliussss.hidns.vip:{port}/ip.json",
+            "https://{hex_ip}.bestcf.cmliussss.hidns.vip:{port}/ip.json",
             timeout_seconds=5,
         )
 
@@ -52,7 +52,7 @@ class LatencyLogicTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.colo, "SJC")
         self.assertGreaterEqual(result.avg_time, 1)
         for _, url in client.calls:
-            self.assertTrue(url.startswith("https://01020304.nip.cmliussss.hidns.vip:443/ip.json?_t="))
+            self.assertTrue(url.startswith("https://01020304.bestcf.cmliussss.hidns.vip:443/ip.json?_t="))
 
 
 if __name__ == "__main__":
