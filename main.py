@@ -53,7 +53,7 @@ async def main() -> None:
     for r in top:
         geo = geo_map.get(r.ip)
         label = geo.label if geo and geo.status == "success" else r.colo
-        lines.append(f"{r.ip}:{r.port}#{label}")
+        lines.append(f"{r.ip}:{r.port}#{label}-[{r.avg_time}ms]")
 
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
