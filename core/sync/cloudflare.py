@@ -34,10 +34,11 @@ async def sync_ips_to_cloudflare_dns(
     """
     将输出文件中的 IP 同步到 Cloudflare DNS A 记录。
 
-    同步策略：
+    同步策略（差分更新，避免解析空窗）：
     - 通过 token 获取账号下第一个 zone
-    - 删除目标记录名下已有 A 记录
-    - 为输出文件中的每个唯一 IP 创建一条新的 A 记录
+    - 对比目标记录名下已有 A 记录与输出文件中的 IP
+    - 先创建新增 IP 的 A 记录，再删除不在列表中的旧记录（含重复记录）
+    - 已存在且仍在列表中的记录保持不变，不做任何改动
     """
     if not token:
         raise CloudflareDNSSyncError("缺少 Cloudflare token，请传入 token")
@@ -63,18 +64,30 @@ async def sync_ips_to_cloudflare_dns(
             record_name=record_name,
         )
 
-        logger.info("Cloudflare DNS 同步目标: {}，待删除 A 记录 {} 条", record_name, len(records))
+        # 差分：目标 IP 中每个保留一条已有记录，其余（已淘汰、重复、无效）标记删除
+        desired = set(ips)
+        kept_ips: set[str] = set()
+        records_to_delete: list[dict[str, Any]] = []
         for record in records:
-            await _delete_dns_record(
-                client=client,
-                headers=headers,
-                zone_id=zone_id,
-                record_id=record["id"],
-            )
-            logger.info("已删除 Cloudflare DNS 记录: {} -> {}", record["name"], record["content"])
+            content = record.get("content")
+            if content in desired and content not in kept_ips:
+                kept_ips.add(content)
+            else:
+                records_to_delete.append(record)
 
+        ips_to_create = [ip for ip in ips if ip not in kept_ips]
+
+        logger.info(
+            "Cloudflare DNS 差分同步目标: {}，保持 {} 条 / 新增 {} 条 / 删除 {} 条",
+            record_name,
+            len(kept_ips),
+            len(ips_to_create),
+            len(records_to_delete),
+        )
+
+        # 先建后删：全程至少保留一组可用记录，避免解析空窗
         created_records: list[dict[str, Any]] = []
-        for ip in ips:
+        for ip in ips_to_create:
             created = await _create_dns_record(
                 client=client,
                 headers=headers,
@@ -85,13 +98,29 @@ async def sync_ips_to_cloudflare_dns(
             created_records.append(created)
             logger.info("已创建 Cloudflare DNS 记录: {} -> {}", record_name, ip)
 
-    logger.info("Cloudflare DNS 同步完成: {}，创建 {} 条 A 记录", record_name, len(created_records))
+        for record in records_to_delete:
+            await _delete_dns_record(
+                client=client,
+                headers=headers,
+                zone_id=zone_id,
+                record_id=record["id"],
+            )
+            logger.info("已删除 Cloudflare DNS 记录: {} -> {}", record["name"], record["content"])
+
+    logger.info(
+        "Cloudflare DNS 同步完成: {}，保持 {} 条 / 新增 {} 条 / 删除 {} 条",
+        record_name,
+        len(kept_ips),
+        len(created_records),
+        len(records_to_delete),
+    )
     return {
         "zone_id": zone_id,
         "domain": domain,
         "record_name": record_name,
-        "deleted": len(records),
+        "kept": len(kept_ips),
         "created": len(created_records),
+        "deleted": len(records_to_delete),
     }
 
 
